@@ -1,10 +1,8 @@
 # tl;dr Kubernetes 
 
-<!-- TOC -->autoauto- [tl;dr Kubernetes](#tldr-kubernetes)auto    - [Install Kubectl](#install-kubectl)auto    - [Install Minikube](#install-minikube)auto    - [Resources](#resources)autoauto<!-- /TOC -->
-
 ## Install Kubectl
 
->>> _Kubectl_ is the command line tool used to run commands against your Kubernetes cluster.
+> _Kubectl_ is the command line tool used to run commands against your Kubernetes cluster.
 
 You must use a kubectl version that is within one minor version difference of
 your cluster. For example, a v1.2 client should work with v1.1, v1.2, and v1.3
@@ -32,7 +30,7 @@ master. Using the latest version of kubectl helps avoid unforeseen issues.
 
 ## Install Minikube
 
->>>_Minikube is a tool that runs a single-node Kubernetes cluster in a virtual machine on your personal computer._
+>_Minikube is a tool that runs a single-node Kubernetes cluster in a virtual machine on your personal computer._
 
 1. Install either [KVM](https://www.linux-kvm.org/page/Main_Page) (which also
    uses QEMU) or [Virtualbox](https://www.virtualbox.org/wiki/Downloads). It's
@@ -86,4 +84,4 @@ master. Using the latest version of kubectl helps avoid unforeseen issues.
 
 1. 
 
->>> _One of the links broken? Make a [pull request](https://github.com/strickolas/tldr/pulls)!_
+> _One of the links broken? Make a [pull request](https://github.com/strickolas/tldr/pulls)!_
