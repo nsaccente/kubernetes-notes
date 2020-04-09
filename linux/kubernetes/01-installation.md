@@ -1,8 +1,28 @@
 # tl;dr Kubernetes 
 
+
+## Introduction
+Kubernetes (sometimes written as k8s) coordinates a highly available cluster
+of computers to work as a single unit by automating the distribution and
+scheduling of application containers. To accomplish this, Kubernetes uses two
+_"resources"_:
+
+  * __Master__: Resposible for managing the cluster; i.e. scheduling, scaling
+    applications, rolling out updates, and maintaining applications' desired
+    state.
+  * __Worker__: A node is a VM or a physical computer that serves as a worker
+    machine in a Kubernetes cluster. Each node has a __Kubelet__, which is an agent
+    for managing the node and communicating with the Kubernetes master. 
+
+When you deploy applications on Kubernetes, you tell the master to start the application containers. The master schedules the containers to run on the cluster's nodes. The nodes communicate with the master using the Kubernetes API, which the master exposes. End users can also use the Kubernetes API directly to interact with the cluster.
+
+>> **For production**: A Kubernetes cluster should have at least 3 workers. 
+
+
+
 ## Install Kubectl
 
-> _Kubectl_ is the command line tool used to run commands against your Kubernetes cluster.
+> Kubectl is the command line tool used to run commands against your Kubernetes cluster.
 
 You must use a kubectl version that is within one minor version difference of
 your cluster. For example, a v1.2 client should work with v1.1, v1.2, and v1.3
@@ -30,7 +50,9 @@ master. Using the latest version of kubectl helps avoid unforeseen issues.
 
 ## Install Minikube
 
->_Minikube is a tool that runs a single-node Kubernetes cluster in a virtual machine on your personal computer._
+> Minikube is a lightweight Kubernetes implementation that creates a VM on your
+> local machine and deploys a simple cluster containing only one node.
+
 
 1. Install either [KVM](https://www.linux-kvm.org/page/Main_Page) (which also
    uses QEMU) or [Virtualbox](https://www.virtualbox.org/wiki/Downloads). It's
@@ -70,7 +92,20 @@ master. Using the latest version of kubectl helps avoid unforeseen issues.
       #> apiserver: Running
       #> kubeconfig: Configured
       ```
-   1. 
+   1.  If something doesn't seem right, use the following to increase your logging level:
+       ```
+       minikube -v=9 start
+       ```
+   1. When all else fails, you can always blow away your minikube environment using:
+      ```
+      minikube delete
+      ``` 
+   
+   1. Stop minikube with:
+      ```
+      minikube stop
+      ```
+
 
 
 ## Resources
@@ -82,6 +117,6 @@ master. Using the latest version of kubectl helps avoid unforeseen issues.
 
 1. [Specifying the VM Driver](https://kubernetes.io/docs/setup/learning-environment/minikube/#specifying-the-vm-driver)
 
-1. 
+1. [Blow Away Your MiniKube Env](https://stackoverflow.com/questions/50769737/troubleshooting-minikube)
 
 > _One of the links broken? Make a [pull request](https://github.com/strickolas/tldr/pulls)!_
