@@ -12,10 +12,8 @@
 1. [ Minikube Cookbook ](#minikube-cookbook)
 
 
-<br>
-
 ----
-
+<br>
 <br>
 
 
@@ -40,10 +38,8 @@ When you deploy applications on Kubernetes, you tell the master to start the app
 <a href="#top">Back to top</a>
 
 
-<br>
-
 ----
-
+<br>
 <br>
 
 
@@ -88,10 +84,9 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 <a href="#top">Back to top</a>
 
 
-<br>
 
 ----
-
+<br>
 <br>
 
 
@@ -173,10 +168,8 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 <a href="#top">Back to top</a>
 
 
-<br>
-
 ----
-
+<br>
 <br>
 
 
