@@ -40,9 +40,7 @@ When you deploy applications on Kubernetes, you tell the master to start the app
 
 
 <a name="install-kubectl"></a>
-## Install Kubectl
-
-**[Visit the Kubectl Wiki](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)**
+## Install Kubectl <font size="2">**[Visit the Kubectl Wiki](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)**</font>
 > Kubectl is the command line tool used to run commands against your Kubernetes cluster.
 
 You must use a kubectl version that is within one minor version difference of
@@ -84,9 +82,8 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 
 
 <a name="install-minikube"></a>
-## Install Minikube
 
-**[Visit the Minikube Wiki](https://minikube.sigs.k8s.io/docs/)**
+## Install Minikube <font size="2">**[Visit the Minikube Wiki](https://minikube.sigs.k8s.io/docs/)**</font>
 
 > Minikube is a lightweight Kubernetes implementation that creates a VM on your
 > local machine and deploys a simple cluster containing only one node.
@@ -174,8 +171,7 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 
 1. We will rely on `kubectl` to interact with the minikube cluster we've spun up.
    Let's use `kubectl run <name-whatever-you-want>`, which provides a way to run a Docker
-   image on our Kubernetes cluster. We are pulling version 1.4 of the image at specified link,
-   and telling the container to serve on port 8080.
+   image on our Kubernetes cluster. 
    ```bash
    kubectl run hello-minikube --image=gcr.io/google_containers/echoserver:1.4 --port=8080
    ```
@@ -192,3 +188,8 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
    `back2thefuture` is what you should see when your container is up and running.
    
 1. 
+
+
+
+## Concepts <font size="1"> \#thirtyMinuteTheory </font>
+1. Kubernetes Object
