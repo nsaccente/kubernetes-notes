@@ -1,13 +1,18 @@
-# tl;dr Kubernetes 
+# too disorganized; didnt read: the Kubernetes documentation
+
+## Quick Links
+* [Visit the Kubectl Wiki](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)
+* [Visit the Minikube Wiki](https://minikube.sigs.k8s.io/docs/)
 
 
+## Table of Contents
 1. [ Introduction ](#introduction)
 1. [ Install Kubectl ](#install-kubectl)
 1. [ Install Minikube ](#install-minikube)
 1. [ Minikube Cookbook ](#asdf)
 
 
-
+---
 
 <a name="introduction"></a>
 ## Introduction
@@ -35,6 +40,7 @@ When you deploy applications on Kubernetes, you tell the master to start the app
 <a name="install-kubectl"></a>
 ## Install Kubectl
 
+**[Visit the Kubectl Wiki](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)**
 > Kubectl is the command line tool used to run commands against your Kubernetes cluster.
 
 You must use a kubectl version that is within one minor version difference of
@@ -50,7 +56,7 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 </summary>
 
 1. Install kubectl
-   ```
+   ```bash
    curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
    ```
    To download a specific version, replace the `$(curl -s
@@ -58,12 +64,12 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
    the command with the specific version number.
 
 1. Make the kubectl binary executable and move it into your path
-   ```
+   ```bash
    chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
    ```
 
 1. Test your install:
-   ```
+   ```bash
    kubectl version --client
    ```
 
@@ -81,6 +87,8 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 <a name="install-minikube"></a>
 ## Install Minikube
 
+**[Visit the Minikube Wiki](https://minikube.sigs.k8s.io/docs/)**
+
 > Minikube is a lightweight Kubernetes implementation that creates a VM on your
 > local machine and deploys a simple cluster containing only one node.
 
@@ -94,6 +102,7 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 
 1. Install either [KVM](https://www.linux-kvm.org/page/Main_Page) (which also
    uses QEMU) or [Virtualbox](https://www.virtualbox.org/wiki/Downloads).
+
    1. If you don't want to use a VM, use the `--driver=none` flag to run Kubernetes
       components directly on the host. Using this driver requires
       [Docker](https://www.docker.com/products/docker-desktop) and a Linux
@@ -103,24 +112,28 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
           issues. Before using --driver=none, consult 
           [this documentation](https://minikube.sigs.k8s.io/docs/drivers/none/) 
           for more information.
+          
 1. Now, install Minikube via:
-   ```
+   ```bash
    curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 \
    && chmod +x minikube
    ```
+
 1. Add minikube to your path:
-   ```
+   ```bash
    sudo install minikube /usr/local/bin/ && rm ./minikube
    ```
+
 1. Verify install replacing the `driver_name` with the hypervisor of your choice
-   from 
-   [this list](https://kubernetes.io/docs/setup/learning-environment/minikube/#specifying-the-vm-driver). Run the following:
+   from [this list](https://kubernetes.io/docs/setup/learning-environment/minikube/#specifying-the-vm-driver).
+   Run the following:
    
-   1. ```
+   1. ```bash
       minikube start --driver=<driver_name>
       ```
+
    1. Once `minikube start` finishes, run:
-      ```
+      ```bash
       minikube status
       
       # Your output should look something like this:
@@ -129,23 +142,22 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
       #> apiserver: Running
       #> kubeconfig: Configured
       ```
+      
    1.  If something doesn't seem right, use the following to increase your logging level:
-       ```
+       ```bash
        minikube -v=9 start
        ```
+
    1. When all else fails, you can always blow away your minikube environment using:
-      ```
+      ```bash
       minikube delete
       ``` 
    
    1. Stop minikube with:
-      ```
+      ```bash
       minikube stop
       ```
 </details>
-
-
-
 
 <a href="#top">Back to top</a>
 
@@ -156,41 +168,27 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 ## Minikube Cookbook
 
 1. Start a local Kubernetes cluster using the `minikube` bootstrap command:
-   ```
+   ```bash
    minikube start
    ```
-   1. We will rely on `kubectl` to interact with the minikube cluster we've spun up.
-   Here we use `kubectl run <name-whatever-you-want>`, which provides a way to run a Docker image on our 
-   Kubernetes cluster. Let's grab an image and run it:
-   ```
+
+1. We will rely on `kubectl` to interact with the minikube cluster we've spun up.
+   Let's use `kubectl run <name-whatever-you-want>`, which provides a way to run a Docker
+   image on our Kubernetes cluster. We are pulling version 1.4 of the image at specified link,
+   and telling the container to serve on port 8080.
+   ```bash
    kubectl run hello-minikube --image=gcr.io/google_containers/echoserver:1.4 --port=8080
    ```
+
+1. It's going to take some time for the pod to be downloaded and started, but we can check the 
+   status of our pod using:
+   ```bash
+   kubectl get pod
+   #> NAME             READY   STATUS              RESTARTS   AGE
+   #> hello-minikube   0/1     ContainerCreating   0          4m33s
+   #> back2thefuture   1/1     Running             0          8m16s
+   ```
+   As you can see by `hello-minikube`'s READY value of 0/1, it's NOT ready. The container named
+   `back2thefuture` is what you should see when your container is up and running.
    
-
-
-
-
-
-
-
-## Resources
-1. [Install and Set Up kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-kubectl-on-linux)
-
-1. [Install Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
-
-1. [Minikube with --driver=none](https://minikube.sigs.k8s.io/docs/drivers/none/)
-
-1. [Specifying the VM Driver](https://kubernetes.io/docs/setup/learning-environment/minikube/#specifying-the-vm-driver)
-
-1. [Blow Away Your MiniKube Env](https://stackoverflow.com/questions/50769737/troubleshooting-minikube)
-
-1. [Kubernetes Tutorial for Beginners](https://www.youtube.com/watch?v=gpmerrSpbHg)
-
 1. 
-
-
-
-
-
-
-> _One of the links broken? Make a [pull request](https://github.com/strickolas/tldr/pulls)!_
