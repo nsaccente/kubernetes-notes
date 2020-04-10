@@ -1,4 +1,4 @@
-# t<disorganized>;dr the Kubernetes docs
+# t&ltdisorganized&lt;dr the Kubernetes docs
 
 ## Quick Links
 * [Visit the Kubectl Wiki](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)
