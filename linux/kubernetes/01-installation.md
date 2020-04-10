@@ -1,19 +1,10 @@
+<a name="top"></a>
 # tl;dr Kubernetes 
 
 
 1. [ Introduction ](#introduction)
 1. [ Install Kubectl ](#install-kubectl)
 1. [ Install Minikube ](#install-minikube)
-
-## 1. Description
-
-sometext
-
-## 2. Usage tips
-
-sometext
-
-
 
 
 
@@ -35,7 +26,9 @@ When you deploy applications on Kubernetes, you tell the master to start the app
 
 >> **For production**: A Kubernetes cluster should have at least 3 workers. 
 
+<a href="#top">Back to top</a>
 
+----
 
 
 
@@ -69,6 +62,10 @@ master. Using the latest version of kubectl helps avoid unforeseen issues.
    kubectl version --client
    ```
 
+
+<a href="#top">Back to top</a>
+
+----
 
 
 
@@ -131,9 +128,11 @@ master. Using the latest version of kubectl helps avoid unforeseen issues.
       ```
       minikube stop
       ```
-   
 
-   
+[ Back to top ](#top)
+
+----
+
 
 
 
