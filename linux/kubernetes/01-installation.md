@@ -1,11 +1,23 @@
 # tl;dr Kubernetes 
 
 
+1. [ Introduction ](#introduction)
+1. [ Install Kubectl ](#install-kubectl)
+1. [ Install Minikube ](#install-minikube)
+
+## 1. Description
+
+sometext
+
+## 2. Usage tips
+
+sometext
 
 
 
 
 
+<a name="introduction"></a>
 ## Introduction
 Kubernetes (sometimes written as k8s) coordinates a highly available cluster
 of computers to work as a single unit by automating the distribution and
@@ -29,6 +41,7 @@ When you deploy applications on Kubernetes, you tell the master to start the app
 
 
 
+<a name="install-kubectl"></a>
 ## Install Kubectl
 
 > Kubectl is the command line tool used to run commands against your Kubernetes cluster.
@@ -61,7 +74,7 @@ master. Using the latest version of kubectl helps avoid unforeseen issues.
 
 
 
-
+<a name="install-minikube"></a>
 ## Install Minikube
 
 > Minikube is a lightweight Kubernetes implementation that creates a VM on your
