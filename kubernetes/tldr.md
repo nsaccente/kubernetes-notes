@@ -1,10 +1,11 @@
-<a name="top"></a>
 # tl;dr Kubernetes 
 
 
 1. [ Introduction ](#introduction)
 1. [ Install Kubectl ](#install-kubectl)
 1. [ Install Minikube ](#install-minikube)
+1. [ Minikube Cookbook ](#asdf)
+
 
 
 
@@ -31,9 +32,6 @@ When you deploy applications on Kubernetes, you tell the master to start the app
 ----
 
 
-
-
-
 <a name="install-kubectl"></a>
 ## Install Kubectl
 
@@ -43,6 +41,13 @@ You must use a kubectl version that is within one minor version difference of
 your cluster. For example, a v1.2 client should work with v1.1, v1.2, and v1.3
 master. Using the latest version of kubectl helps avoid unforeseen issues.
 
+
+_[Add Windows or MacOS instructions with a pull request!](https://github.com/strickolas/tldr/pulls)_
+
+<details open>
+<summary>
+<a class="btnfire small stroke"><em class="fas fa-chevron-circle-down"></em>&nbsp;&nbsp;Installation on Linux</a>    
+</summary>
 
 1. Install kubectl
    ```
@@ -62,10 +67,12 @@ master. Using the latest version of kubectl helps avoid unforeseen issues.
    kubectl version --client
    ```
 
+</details>
 
 <a href="#top">Back to top</a>
 
 ----
+
 
 
 
@@ -77,6 +84,13 @@ master. Using the latest version of kubectl helps avoid unforeseen issues.
 > Minikube is a lightweight Kubernetes implementation that creates a VM on your
 > local machine and deploys a simple cluster containing only one node.
 
+
+_[Add Windows or MacOS instructions with a pull request!](https://github.com/strickolas/tldr/pulls)_
+
+<details open>
+<summary>
+<a class="btnfire small stroke"><em class="fas fa-chevron-circle-down"></em>&nbsp;&nbsp;Installation on Linux</a>   
+</summary> 
 
 1. Install either [KVM](https://www.linux-kvm.org/page/Main_Page) (which also
    uses QEMU) or [Virtualbox](https://www.virtualbox.org/wiki/Downloads).
@@ -128,12 +142,30 @@ master. Using the latest version of kubectl helps avoid unforeseen issues.
       ```
       minikube stop
       ```
+</details>
 
-[ Back to top ](#top)
+
+
+
+<a href="#top">Back to top</a>
 
 ----
 
 
+<a name="asdf"></a>
+## Minikube Cookbook
+
+1. Start a local Kubernetes cluster using the `minikube` bootstrap command:
+   ```
+   minikube start
+   ```
+   1. We will rely on `kubectl` to interact with the minikube cluster we've spun up.
+   Here we use `kubectl run <name-whatever-you-want>`, which provides a way to run a Docker image on our 
+   Kubernetes cluster. Let's grab an image and run it:
+   ```
+   kubectl run hello-minikube --image=gcr.io/google_containers/echoserver:1.4 --port=8080
+   ```
+   
 
 
 
@@ -151,5 +183,14 @@ master. Using the latest version of kubectl helps avoid unforeseen issues.
 1. [Specifying the VM Driver](https://kubernetes.io/docs/setup/learning-environment/minikube/#specifying-the-vm-driver)
 
 1. [Blow Away Your MiniKube Env](https://stackoverflow.com/questions/50769737/troubleshooting-minikube)
+
+1. [Kubernetes Tutorial for Beginners](https://www.youtube.com/watch?v=gpmerrSpbHg)
+
+1. 
+
+
+
+
+
 
 > _One of the links broken? Make a [pull request](https://github.com/strickolas/tldr/pulls)!_
