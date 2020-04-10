@@ -1,4 +1,5 @@
-# t&ltdisorganized&lt;dr the Kubernetes docs
+# tl;dr the Kubernetes docs
+###### let l = disorganized;
 
 ## Quick Links
 * [Visit the Kubectl Wiki](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)
