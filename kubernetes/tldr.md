@@ -13,7 +13,10 @@
 1. [ Minikube Cookbook ](#minikube-cookbook)
 1. [ Concepts ](#concepts)
    1. [ Objects ](#concepts-objects)
+   1. [ Pods ](#concepts-pods)
    1. [ Namespaces ](#concepts-namespaces)
+   1. [ Labels and Selectors ](#concepts-labelsandselectors)
+   1. []
 
 
 ----
@@ -226,6 +229,26 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 <a href="#top">Back to top</a>
 
 
+
+
+<a name="concepts-pods"></a>
+### Pods
+1. A pod is an object that represents a process running on your cluster. A pod encapsulates 
+   an application's container(s), storage resources, a unique IP, and options that govern 
+   how the container(s) should run.
+1. You can mix-and-match either of the following pod patterns to fit the specific need of
+   an application you're developing. You are not married to a single pattern.
+   1. In _one-container-per-pod_, think of a Pod as a wrapper around a single container, 
+      and Kubernetes will just manage the Pods rather than the containers, directly.
+      This pod pattern will be referred to as a `singleton pod`.
+   1. In _multiple-containers-per-pod_, a Pod might encapsulate an application composed 
+      of multiple co-located containers that are tightly coupled and need to share resources.
+      This pod pattern will be referred to as a `multi-container pod`.
+
+   
+
+
+
 <a name="concepts-namespaces"></a>
 ### Namespaces
 1. A _namespace_ is a virtual cluster backed by a physical cluster. Think of it as a way for 
@@ -296,6 +319,51 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
    kubectl api-resources --namespaced=false
    ```
       
-<a name="concepts-namespaces"></a>
-1. **Labels and Selectors**
+<a name="concepts-labelsandselectors"></a>
+### Labels and Selectors
+1. **Labels** are key-value pairs that are attached to objects, and are intended to be used to
+   specify identifying attributes of objects that are meaningful and relevant to users.
+   Use labels to organize, select, or filter subsets of objects. Labels can be attached upon
+   the time of creation, and subsequently added and modified at any time.
+   ```json
+   "metadata": {
+      "labels": {
+         "key1" : "value1",
+         "key2" : "value2"
+      }
+   }
+   ```
 
+1. We can query objects using __selectors__, in one of two ways with the `-l` flag:
+   1. _Equality based_ selection uses `==` (which can be shortened to just `=`),
+      and `!=` operators just as you might assume. Here's an example query:
+      ```bash
+      kubectl get pods -l environment=production,tier=!frontend
+      ```
+      Here, we are querying for all pods with an 'environment' key equal to 'production',
+      and a 'tier' key not equal to 'frontend' (this includes pods where the value of 'tier' 
+      is empty). 
+   
+   1. _Set based_ selection uses `in`, `notin`, and `exists`. Here's an exmple query:
+      ```bash
+      kubectl get pods -l 'environment in (production, qa)'
+      ```
+      Here, we are querying for all pods whose 'environment' is equal to either 'production'
+      or 'qa'. Set based expressions are generally more expressive than equality based, but
+      take some more getting used to.
+
+1. Non-identifying information can be added to the metadata values as an _annotation_:
+   ```json
+   "metadata": {
+      "annotations": {
+         "key1" : "value1",
+         "key2" : "value2"
+      }
+   }
+   ```
+   You can use the annotations for the following, but how you choose to use them is purely
+   up to your and your organization's standards.
+      * Pointers to logging, monitoring, analytics, or audit repositories.
+      * Phone or pager numbers of persons responsible.
+      * A link to documentation for the running application.
+      
