@@ -209,92 +209,92 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 ## Concepts 
 
 <a name="concepts-objects"></a>
-1. **Objects**
-   1. _Objects_ are persistent entities that Kubernetes uses to represent the state 
-      of the cluster; specifically:
-      * What containerized applications are running (and on which nodes).
-      * The resources available to those applications.
-      * The policies around how those applications behave; e.g. restart policies, upgrades, 
-        and fault-tolerance.
+### Objects
+1. _Objects_ are persistent entities that Kubernetes uses to represent the state 
+   of the cluster; specifically:
+   * What containerized applications are running (and on which nodes).
+   * The resources available to those applications.
+   * The policies around how those applications behave; e.g. restart policies, upgrades, 
+      and fault-tolerance.
 
-   1. Kubernetes will work to make sure that your application's current state is the same as 
-      it's desired state. 
-      * Every object has a **status** attribute, which describes the _current state_ of the object.
-      * You can declare the **spec** attribute of the object when creating a Kubernetes object, 
-      which describes the _desired state_ of the resource. 
+1. Kubernetes will work to make sure that your application's current state is the same as 
+   it's desired state. 
+   * Every object has a **status** attribute, which describes the _current state_ of the object.
+   * You can declare the **spec** attribute of the object when creating a Kubernetes object, 
+   which describes the _desired state_ of the resource. 
 
-   <a href="#top">Back to top</a>
+<a href="#top">Back to top</a>
 
 
 <a name="concepts-namespaces"></a>
-1. **Namespaces**
-   1. A _namespace_ is a virtual cluster backed by a physical cluster. Think of it as a way for 
-      two teams in the same organization to build separate applications on the same hardware 
-      without the need to worry about interfering with the other team's applications accidently.
-      There are a few things to keep in mind about namespaces:
-      1. Namespaces provide a scope for names.
-      1. Resource names must be unique within the namespace; but can be repeated across namespaces.
-      1. You cannot nest namespaces.
-      1. A Kubernetes resource can only exist in one namespace.
-   
-   1. View existing namespaces with the following command:
-      ```bash
-      kubectl get namespaces
-      #> NAME              STATUS   AGE
-      #> default           Active   154m
-      #> kube-node-lease   Active   154m
-      #> kube-public       Active   154m
-      #> kube-system       Active   154m
-      ```
-      * **default** - The default namespace for objects with no other namespace.
-      * **kube-system** - The namespace for objects created by the Kubernetes System.
-      * **kube-public** - This namespace is created automatically and is readable by all users
-                          (including those not authenticated). This namespace is mostly reserved for 
-                          cluster usage, in case that some resources should be visible and readable 
-                          publicly throughout the whole cluster. This public aspect is purely 
-                          convention and is not mandatory.
+### Namespaces
+1. A _namespace_ is a virtual cluster backed by a physical cluster. Think of it as a way for 
+   two teams in the same organization to build separate applications on the same hardware 
+   without the need to worry about interfering with the other team's applications accidently.
+   There are a few things to keep in mind about namespaces:
+   1. Namespaces provide a scope for names.
+   1. Resource names must be unique within the namespace; but can be repeated across namespaces.
+   1. You cannot nest namespaces.
+   1. A Kubernetes resource can only exist in one namespace.
 
-   1. You can create a namespace with the following:
-      ```bash
-      kubectl create namespace <your-new-namespace>
-      ```
-      Your namespace name must:
-      * contain at most 63 characters
-      * contain only lowercase alphanumeric characters or ‘-’
-      * start with an alphanumeric character
-      * end with an alphanumeric character
+1. View existing namespaces with the following command:
+   ```bash
+   kubectl get namespaces
+   #> NAME              STATUS   AGE
+   #> default           Active   154m
+   #> kube-node-lease   Active   154m
+   #> kube-public       Active   154m
+   #> kube-system       Active   154m
+   ```
+   * **default** - The default namespace for objects with no other namespace.
+   * **kube-system** - The namespace for objects created by the Kubernetes System.
+   * **kube-public** - This namespace is created automatically and is readable by all users
+                        (including those not authenticated). This namespace is mostly reserved for 
+                        cluster usage, in case that some resources should be visible and readable 
+                        publicly throughout the whole cluster. This public aspect is purely 
+                        convention and is not mandatory.
 
-      When you create a service, Kubernetes creates a corresponding DNS entry of the form
-      `<service-name>.<namespace-name>.svc.cluster.local`, which means that if a container just uses
-       `<service-name>`, it will resolve to the service which is local to a namespace. This is useful
-      for using the same configuration across multiple namespaces such as Development, Stagin, and
-      Production. If you want to reach across namespaces, you need to use the fully qualified domain
-      name (FQDN).
+1. You can create a namespace with the following:
+   ```bash
+   kubectl create namespace <your-new-namespace>
+   ```
+   Your namespace name must:
+   * contain at most 63 characters
+   * contain only lowercase alphanumeric characters or ‘-’
+   * start with an alphanumeric character
+   * end with an alphanumeric character
 
-   1. You can delete a namespace using the following, but be careful! This deletes everything in
-      the namespace!
-      ```bash
-      kubectl delete namespace <your-old-namespace>
-      ```
-      * > **NOTE**: This delete is asynchronous, so you may see the namespace for a little while. 
-                    Give it a second!
+   When you create a service, Kubernetes creates a corresponding DNS entry of the form
+   `<service-name>.<namespace-name>.svc.cluster.local`, which means that if a container just uses
+      `<service-name>`, it will resolve to the service which is local to a namespace. This is useful
+   for using the same configuration across multiple namespaces such as Development, Stagin, and
+   Production. If you want to reach across namespaces, you need to use the fully qualified domain
+   name (FQDN).
 
-   1. It is not necessary to use multiple namespaces just to separate slightly different resources,
-      such as different versions of the same software: use version labels to distinguish resources 
-      within the same namespace. More on that later...
+1. You can delete a namespace using the following, but be careful! This deletes everything in
+   the namespace!
+   ```bash
+   kubectl delete namespace <your-old-namespace>
+   ```
+   * > **NOTE**: This delete is asynchronous, so you may see the namespace for a little while. 
+                  Give it a second!
 
-   1. Finally, you can specify the namespace to run a resource in with the `--namespace=<your_namespace>` flag.
+1. It is not necessary to use multiple namespaces just to separate slightly different resources,
+   such as different versions of the same software: use version labels to distinguish resources 
+   within the same namespace. More on that later...
+
+1. Finally, you can specify the namespace to run a resource in with the `--namespace=<your_namespace>` flag.
 
 
-   1. As if this isn't confusing enough already, not all objects exist within a namespace. Use the
-      following command:
-      ```bash
-      # In a namespace
-      kubectl api-resources --namespaced=true 
+1. As if this isn't confusing enough already, not all objects exist within a namespace. Use the
+   following command:
+   ```bash
+   # In a namespace
+   kubectl api-resources --namespaced=true 
 
-      # Not in a namespace
-      kubectl api-resources --namespaced=false
-      ```
+   # Not in a namespace
+   kubectl api-resources --namespaced=false
+   ```
       
 <a name="concepts-namespaces"></a>
 1. **Labels and Selectors**
