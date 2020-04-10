@@ -2,6 +2,7 @@
 
 ## Quick Links
 * [Visit the Kubectl Wiki](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)
+* [Read the Kubectl Book](https://kubectl.docs.kubernetes.io/)
 * [Visit the Minikube Wiki](https://minikube.sigs.k8s.io/docs/)
 
 
@@ -10,6 +11,9 @@
 1. [ Install Kubectl ](#install-kubectl)
 1. [ Install Minikube ](#install-minikube)
 1. [ Minikube Cookbook ](#minikube-cookbook)
+1. [ Concepts ](#concepts)
+   1. [ Objects ](#concepts-objects)
+   1. [ Namespaces ](#concepts-namespaces)
 
 
 ----
@@ -26,7 +30,10 @@ _"resources"_:
     applications, rolling out updates, and maintaining applications' desired
     state.
   * __Worker__: A node is a VM or a physical computer that serves as a worker
-    machine in a Kubernetes cluster. Each node has a __Kubelet__, which is an agent
+    machine in a Kubernetes cluster. 
+    
+    
+    Each node has a __Kubelet__, which is an agent
     for managing the node and communicating with the Kubernetes master. 
 
 When you deploy applications on Kubernetes, you tell the master to start the application containers. The master schedules the containers to run on the cluster's nodes. The nodes communicate with the master using the Kubernetes API, which the master exposes. End users can also use the Kubernetes API directly to interact with the cluster.
@@ -40,7 +47,12 @@ When you deploy applications on Kubernetes, you tell the master to start the app
 
 
 <a name="install-kubectl"></a>
-## Install Kubectl <font size="2">**[Visit the Kubectl Wiki](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)**</font>
+## Install Kubectl
+
+**[Visit the Kubectl Wiki](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)**
+
+**[Read the Kubectl Book](https://kubectl.docs.kubernetes.io/)**
+
 > Kubectl is the command line tool used to run commands against your Kubernetes cluster.
 
 You must use a kubectl version that is within one minor version difference of
@@ -82,8 +94,9 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 
 
 <a name="install-minikube"></a>
+## Install Minikube
 
-## Install Minikube <font size="2">**[Visit the Minikube Wiki](https://minikube.sigs.k8s.io/docs/)**</font>
+**[Visit the Minikube Wiki](https://minikube.sigs.k8s.io/docs/)**
 
 > Minikube is a lightweight Kubernetes implementation that creates a VM on your
 > local machine and deploys a simple cluster containing only one node.
@@ -186,10 +199,103 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
    ```
    As you can see by `hello-minikube`'s READY value of 0/1, it's NOT ready. The container named
    `back2thefuture` is what you should see when your container is up and running.
+
+   <a href="#top">Back to top</a>
+
+
+--- 
+
+<a name="concepts"></a>
+## Concepts 
+
+<a name="concepts-objects"></a>
+1. **Objects**
+   1. _Objects_ are persistent entities that Kubernetes uses to represent the state 
+      of the cluster; specifically:
+      * What containerized applications are running (and on which nodes).
+      * The resources available to those applications.
+      * The policies around how those applications behave; e.g. restart policies, upgrades, 
+        and fault-tolerance.
+
+   1. Kubernetes will work to make sure that your application's current state is the same as 
+      it's desired state. 
+      * Every object has a **status** attribute, which describes the _current state_ of the object.
+      * You can declare the **spec** attribute of the object when creating a Kubernetes object, 
+      which describes the _desired state_ of the resource. 
+
+   <a href="#top">Back to top</a>
+
+
+<a name="concepts-namespaces"></a>
+1. **Namespaces**
+   1. A _namespace_ is a virtual cluster backed by a physical cluster. Think of it as a way for 
+      two teams in the same organization to build separate applications on the same hardware 
+      without the need to worry about interfering with the other team's applications accidently.
+      There are a few things to keep in mind about namespaces:
+      1. Namespaces provide a scope for names.
+      1. Resource names must be unique within the namespace; but can be repeated across namespaces.
+      1. You cannot nest namespaces.
+      1. A Kubernetes resource can only exist in one namespace.
    
-1. 
+   1. View existing namespaces with the following command:
+      ```bash
+      kubectl get namespaces
+      #> NAME              STATUS   AGE
+      #> default           Active   154m
+      #> kube-node-lease   Active   154m
+      #> kube-public       Active   154m
+      #> kube-system       Active   154m
+      ```
+      * **default** - The default namespace for objects with no other namespace.
+      * **kube-system** - The namespace for objects created by the Kubernetes System.
+      * **kube-public** - This namespace is created automatically and is readable by all users
+                          (including those not authenticated). This namespace is mostly reserved for 
+                          cluster usage, in case that some resources should be visible and readable 
+                          publicly throughout the whole cluster. This public aspect is purely 
+                          convention and is not mandatory.
+
+   1. You can create a namespace with the following:
+      ```bash
+      kubectl create namespace <your-new-namespace>
+      ```
+      Your namespace name must:
+      * contain at most 63 characters
+      * contain only lowercase alphanumeric characters or ‘-’
+      * start with an alphanumeric character
+      * end with an alphanumeric character
+
+      When you create a service, Kubernetes creates a corresponding DNS entry of the form
+      `<service-name>.<namespace-name>.svc.cluster.local`, which means that if a container just uses
+       `<service-name>`, it will resolve to the service which is local to a namespace. This is useful
+      for using the same configuration across multiple namespaces such as Development, Stagin, and
+      Production. If you want to reach across namespaces, you need to use the fully qualified domain
+      name (FQDN).
+
+   1. You can delete a namespace using the following, but be careful! This deletes everything in
+      the namespace!
+      ```bash
+      kubectl delete namespace <your-old-namespace>
+      ```
+      * > **NOTE**: This delete is asynchronous, so you may see the namespace for a little while. 
+                    Give it a second!
+
+   1. It is not necessary to use multiple namespaces just to separate slightly different resources,
+      such as different versions of the same software: use version labels to distinguish resources 
+      within the same namespace. More on that later...
+
+   1. Finally, you can specify the namespace to run a resource in with the `--namespace=<your_namespace>` flag.
 
 
+   1. As if this isn't confusing enough already, not all objects exist within a namespace. Use the
+      following command:
+      ```bash
+      # In a namespace
+      kubectl api-resources --namespaced=true 
 
-## Concepts <font size="1"> \#thirtyMinuteTheory </font>
-1. Kubernetes Object
+      # Not in a namespace
+      kubectl api-resources --namespaced=false
+      ```
+      
+<a name="concepts-namespaces"></a>
+1. **Labels and Selectors**
+
