@@ -1,5 +1,4 @@
-# tl;dr the Kubernetes docs
-###### let l = disorganized;
+# tl;dr Kubernetes
 
 ## Quick Links
 * [Visit the Kubectl Wiki](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)
@@ -13,7 +12,12 @@
 1. [ Minikube Cookbook ](#minikube-cookbook)
 
 
----
+<br>
+
+----
+
+<br>
+
 
 <a name="introduction"></a>
 ## Introduction
@@ -35,7 +39,12 @@ When you deploy applications on Kubernetes, you tell the master to start the app
 
 <a href="#top">Back to top</a>
 
+
+<br>
+
 ----
+
+<br>
 
 
 <a name="install-kubectl"></a>
@@ -78,11 +87,12 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 
 <a href="#top">Back to top</a>
 
+
+<br>
+
 ----
 
-
-
-
+<br>
 
 
 <a name="install-minikube"></a>
@@ -162,7 +172,12 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 
 <a href="#top">Back to top</a>
 
+
+<br>
+
 ----
+
+<br>
 
 
 <a name="minikube-cookbook"></a>
