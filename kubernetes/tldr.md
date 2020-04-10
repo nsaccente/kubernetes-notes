@@ -13,8 +13,6 @@
 
 
 ----
-<br>
-<br>
 
 
 <a name="introduction"></a>
@@ -39,8 +37,6 @@ When you deploy applications on Kubernetes, you tell the master to start the app
 
 
 ----
-<br>
-<br>
 
 
 <a name="install-kubectl"></a>
@@ -84,10 +80,7 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 <a href="#top">Back to top</a>
 
 
-
 ----
-<br>
-<br>
 
 
 <a name="install-minikube"></a>
@@ -169,8 +162,6 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 
 
 ----
-<br>
-<br>
 
 
 <a name="minikube-cookbook"></a>
