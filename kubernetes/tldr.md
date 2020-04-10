@@ -1,4 +1,4 @@
-# too disorganized; didnt read: the Kubernetes documentation
+# t<disorganized>;dr the Kubernetes docs
 
 ## Quick Links
 * [Visit the Kubectl Wiki](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)
@@ -9,7 +9,7 @@
 1. [ Introduction ](#introduction)
 1. [ Install Kubectl ](#install-kubectl)
 1. [ Install Minikube ](#install-minikube)
-1. [ Minikube Cookbook ](#asdf)
+1. [ Minikube Cookbook ](#minikube-cookbook)
 
 
 ---
@@ -164,7 +164,7 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 ----
 
 
-<a name="asdf"></a>
+<a name="minikube-cookbook"></a>
 ## Minikube Cookbook
 
 1. Start a local Kubernetes cluster using the `minikube` bootstrap command:
