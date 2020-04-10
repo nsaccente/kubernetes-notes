@@ -1,6 +1,11 @@
 # tl;dr Kubernetes 
 
 
+
+
+
+
+
 ## Introduction
 Kubernetes (sometimes written as k8s) coordinates a highly available cluster
 of computers to work as a single unit by automating the distribution and
@@ -17,6 +22,10 @@ _"resources"_:
 When you deploy applications on Kubernetes, you tell the master to start the application containers. The master schedules the containers to run on the cluster's nodes. The nodes communicate with the master using the Kubernetes API, which the master exposes. End users can also use the Kubernetes API directly to interact with the cluster.
 
 >> **For production**: A Kubernetes cluster should have at least 3 workers. 
+
+
+
+
 
 
 
@@ -48,6 +57,11 @@ master. Using the latest version of kubectl helps avoid unforeseen issues.
    ```
 
 
+
+
+
+
+
 ## Install Minikube
 
 > Minikube is a lightweight Kubernetes implementation that creates a VM on your
@@ -55,34 +69,33 @@ master. Using the latest version of kubectl helps avoid unforeseen issues.
 
 
 1. Install either [KVM](https://www.linux-kvm.org/page/Main_Page) (which also
-   uses QEMU) or [Virtualbox](https://www.virtualbox.org/wiki/Downloads). It's
-   purely a matter of personal preference (but VirtualBox is superior IMO).
-   1. If you don't want to use a VM, use the `--driver=none` flag:
-      * Minikube also supports a `--driver=none` option that runs the Kubernetes
-      components on the host and not in a VM. Using this driver requires
+   uses QEMU) or [Virtualbox](https://www.virtualbox.org/wiki/Downloads).
+   1. If you don't want to use a VM, use the `--driver=none` flag to run Kubernetes
+      components directly on the host. Using this driver requires
       [Docker](https://www.docker.com/products/docker-desktop) and a Linux
       environment but not a hypervisor. Do not install Docker using snap, as it
       will more than likely be outdated.
-      * > **Caution**: The none VM driver can result in security and data loss
+      * > **Caution**: The `none` VM driver can result in security and data loss
           issues. Before using --driver=none, consult 
           [this documentation](https://minikube.sigs.k8s.io/docs/drivers/none/) 
           for more information.
-1. Now, install Minikube via
+1. Now, install Minikube via:
    ```
    curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 \
    && chmod +x minikube
    ```
-1. Add minikube to your path
+1. Add minikube to your path:
    ```
    sudo install minikube /usr/local/bin/ && rm ./minikube
    ```
-1. Verify install replacing the `driver_name` with the hypervisor of your choice from 
-   [this list](https://kubernetes.io/docs/setup/learning-environment/minikube/#specifying-the-vm-driver).
+1. Verify install replacing the `driver_name` with the hypervisor of your choice
+   from 
+   [this list](https://kubernetes.io/docs/setup/learning-environment/minikube/#specifying-the-vm-driver). Run the following:
    
    1. ```
       minikube start --driver=<driver_name>
       ```
-   1. Once `minikube start` finishes, run 
+   1. Once `minikube start` finishes, run:
       ```
       minikube status
       
@@ -105,6 +118,14 @@ master. Using the latest version of kubectl helps avoid unforeseen issues.
       ```
       minikube stop
       ```
+   
+
+   
+
+
+
+
+
 
 
 
