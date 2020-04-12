@@ -19,10 +19,10 @@
   - [Minikube Cookbook](#minikube-cookbook)
   - [Concepts](#concepts)
     - [Objects](#objects)
+    - [Worker Nodes](#worker-nodes)
     - [Pods](#pods)
     - [Namespaces](#namespaces)
     - [Labels and Selectors](#labels-and-selectors)
-    - [Field Selectors](#field-selectors)
 
 
 ----
@@ -242,20 +242,69 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 
 --- 
 
+<a name="concepts-workernodes"></a>
+### Worker Nodes
+1. A **worker node** (referred to simply as _node_ in the Kubernetes
+   documentation, which is misleading since node is a very overloaded
+   term) can either be a VM or physical machine in a Kubernetes
+   cluster, which runs a slew of services to aid in management of pods.
+   These services include:
+   1. The **container runtime** is responsible for running containers.
+   1. The **kube-proxy** service programs iptables rules to trap
+      access to service IPs and redirect them to the correct backends.
+   1. The **kubelet** is a service that is responsible for handling
+      requests to create new pods via
+      1. polling a directory for new pod configs to run
+      1. polling a URL for new pod configs to download and run
+      1. from the Kubernetes API server
+
+1. The worker node can be described through the following:
+   ```bash
+   kubectl describe node <name-of-your-node>
+   ```
+   and describes the following:
+   1. **Networking stuff**
+      1. `HostName`: hostname reported by the worker node’s kernel
+      1. `ExternalIP`: the IP address of the worker node that is externally routable
+      1. `InternalIP`: the IP address of the worker node that is routable within
+         the cluster.
+
+   1. **Conditions** describe the status of all `Running` worker nodes.
+      * This is where we introduce **eviction**, which occurs when the status
+        of `Ready` remains unknown for longer than `pod-eviction-timeout`
+        (this can be changed, of course), causing all pods to be scheduled for
+        deletion.
+
+   1. **Capacity and Allocatable** describes the resouces available on the worker
+      node: CPU, memory and the maximum number of pods that can be scheduled onto the node.
+
+   1. **Info** describes general information about the node, such as kernel
+       version, Kubernetes version (kubelet and kube-proxy version), Docker
+       version (if used), and OS name.
+
+<a href="#top">Back to top</a>
+
+
+---
+
 
 <a name="concepts-pods"></a>
 ### Pods
-1. A pod is an object that represents a process running on your cluster. A pod encapsulates 
-   an application's container(s), storage resources, a unique IP, and options that govern 
-   how the container(s) should run.
+1. A **pod** is a collection of containers that share resources, have a
+single IP, and can share volumes. A pod encapsulates 
+an application's container(s), storage resources, a unique IP, and options that govern 
+how the container(s) should run.
+
 1. You can mix-and-match either of the following pod patterns to fit the specific need of
-   an application you're developing. You are not married to a single pattern.
+an application you're developing. You are not married to a single pattern.
+
    1. In _one-container-per-pod_, think of a Pod as a wrapper around a single container, 
-      and Kubernetes will just manage the Pods rather than the containers, directly.
-      This pod pattern will be referred to as a `singleton pod`.
+   and Kubernetes will just manage the Pods rather than the containers, directly.
+   This pod pattern will be referred to as a `singleton pod`.
+
    1. In _multiple-containers-per-pod_, a Pod might encapsulate an application composed 
-      of multiple co-located containers that are tightly coupled and need to share resources.
-      This pod pattern will be referred to as a `multi-container pod`.
+   of multiple co-located containers that are tightly coupled and need to share resources.
+   This pod pattern will be referred to as a `multi-container pod`.
 
 <a href="#top">Back to top</a>
 
@@ -265,32 +314,32 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 <a name="concepts-namespaces"></a>
 ### Namespaces
 1. A _namespace_ is a virtual cluster backed by a physical cluster. Think of it as a way for 
-   two teams in the same organization to build separate applications on the same hardware 
-   without the need to worry about interfering with the other team's applications accidently.
-   There are a few things to keep in mind about namespaces:
-   1. Namespaces provide a scope for names.
-   1. Resource names must be unique within the namespace; but can be repeated across namespaces.
-   1. You cannot nest namespaces.
-   1. A Kubernetes resource can only exist in one namespace.
+two teams in the same organization to build separate applications on the same hardware 
+without the need to worry about interfering with the other team's applications accidently.
+There are a few things to keep in mind about namespaces:
+1. Namespaces provide a scope for names.
+2. Resource names must be unique within the namespace; but can be repeated across namespaces.
+3. You cannot nest namespaces.
+4. A Kubernetes resource can only exist in one namespace.
 
-1. View existing namespaces with the following command:
-   ```bash
-   kubectl get namespaces
-   #> NAME              STATUS   AGE
-   #> default           Active   154m
-   #> kube-node-lease   Active   154m
-   #> kube-public       Active   154m
-   #> kube-system       Active   154m
-   ```
-   * **default** - The default namespace for objects with no other namespace.
-   * **kube-system** - The namespace for objects created by the Kubernetes System.
-   * **kube-public** - This namespace is created automatically and is readable by all users
-                        (including those not authenticated). This namespace is mostly reserved for 
-                        cluster usage, in case that some resources should be visible and readable 
-                        publicly throughout the whole cluster. This public aspect is purely 
-                        convention and is not mandatory.
+5. View existing namespaces with the following command:
+```bash
+kubectl get namespaces
+#> NAME              STATUS   AGE
+#> default           Active   154m
+#> kube-node-lease   Active   154m
+#> kube-public       Active   154m
+#> kube-system       Active   154m
+```
+* **default** - The default namespace for objects with no other namespace.
+* **kube-system** - The namespace for objects created by the Kubernetes System.
+* **kube-public** - This namespace is created automatically and is readable by all users
+		(including those not authenticated). This namespace is mostly reserved for 
+		cluster usage, in case that some resources should be visible and readable 
+		publicly throughout the whole cluster. This public aspect is purely 
+		convention and is not mandatory.
 
-1. You can create a namespace with the following:
+2. You can create a namespace with the following:
    ```bash
    kubectl create namespace <your-new-namespace>
    ```
@@ -307,7 +356,7 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
    Production. If you want to reach across namespaces, you need to use the fully qualified domain
    name (FQDN).
 
-1. You can delete a namespace using the following, but be careful! This deletes everything in
+3. You can delete a namespace using the following, but be careful! This deletes everything in
    the namespace!
    ```bash
    kubectl delete namespace <your-old-namespace>
@@ -315,14 +364,14 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
    * > **NOTE**: This delete is asynchronous, so you may see the namespace for a little while. 
                   Give it a second!
 
-1. It is not necessary to use multiple namespaces just to separate slightly different resources,
+4. It is not necessary to use multiple namespaces just to separate slightly different resources,
    such as different versions of the same software: use version labels to distinguish resources 
    within the same namespace. More on that later...
 
-1. Finally, you can specify the namespace to run a resource in with the `--namespace=<your_namespace>` flag.
+5. Finally, you can specify the namespace to run a resource in with the `--namespace=<your_namespace>` flag.
 
 
-1. As if this isn't confusing enough already, not all objects exist within a namespace. Use the
+6. As if this isn't confusing enough already, not all objects exist within a namespace. Use the
    following command:
    ```bash
    # In a namespace
@@ -341,19 +390,19 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 <a name="concepts-labelsandselectors"></a>
 ### Labels and Selectors
 
+1. **Labels** are key-value pairs that are attached to objects, and are
+   intended to be used to specify identifying attributes of objects that are meaningful and relevant to users. Use labels to organize, select, or filter
+   subsets of objects. Labels can be attached upon the time of creation, and
+   subsequently added and modified at any time.
 
-   1. **Labels** are key-value pairs that are attached to objects, and are intended to be used to specify identifying attributes of objects that are meaningful and relevant to users. Use labels to organize, select, or filter subsets of objects. Labels can be attached upon the time of creation, and subsequently added and modified at any time.
-   
-   ```json
-   "metadata": {
-      "labels": {
+   ```yaml
+   "metadata": 
+      "labels": 
          "key1" : "value1",
          "key2" : "value2"
-      }
-   }
    ```
 
-1. We can query objects using __selectors__, in one of two ways with the `-l` flag:
+1. We can query objects using **label selectors**, in one of two ways with the `-l` flag:
    1. _Equality based_ selection uses `==` (which can be shortened to just `=`),
       and `!=` operators just as you might assume. Here's an example query:
       ```bash
@@ -373,44 +422,33 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
       than equality based, but take some more getting used to.
 
 
-   1. Non-identifying information can be added to the metadata values as an
-      _annotation_:
-      ```json
-      "metadata": {
-         "annotations": {
-            "key1" : "value1",
-            "key2" : "value2"
-         }
-      }
-      ```
-      You can use the annotations for the following, but how you choose to use
-      them is purely up to your and your organization's standards.
-         * Pointers to logging, monitoring, analytics, or audit repositories.
-         * Phone or pager numbers of persons responsible.
-         * A link to documentation for the running application.
-
- <a href="#top">Back to top</a>
+1. Non-identifying information can be added to the metadata values as an
+   **annotation**:
+   ```yaml
+   "metadata": 
+      "annotations": 
+         "key1": "value1",
+         "key2": "value2"
+   ```
+   How you choose to annotations is purely a matter of taste, but here are some
+   examples of what you could use them for:
+      * Pointers to logging, monitoring, analytics, or audit repositories.
+      * Phone or pager numbers of persons responsible.
+      * A link to documentation for the running application.
 
 
---- 
-
-
-<a name="concepts-fieldselectors"></a>
-### Field Selectors
-
-   1. **Field selectors** let you select resources based on the value of one or
-      more resouce fields. Similar to label selectors, we use _equality-based_
-      operators (`=`, `==`, and `!=`), and can daisy-chain selectors
-      together with commas. However, unlike label selectors, 
-      **set-based operators will not work.**
-      ```bash
-      kubectl get pods --field-selector=status.phase!=Running,spec.restartPolicy=Always
-      ```
-      
-   1. Some things to keep in mind:
+1. **Field selectors** let you select resources based on the value of one or
+   more resouce fields. Similar to label selectors, we use _equality-based_
+   operators (`=`, `==`, and `!=`), and can daisy-chain selectors
+   together with commas. However, unlike label selectors, 
+   **set-based operators will not work.**
+   ```bash
+   kubectl get pods --field-selector=status.phase!=Running,spec.restartPolicy=Always
+   ```
+   Some things to keep in mind about field selectors:
       1. Not all Kubernetes resources have support for field selectors.
-      1. **All** resources support `metadata.name` and `metadata.namespace`.
-   
+      2. **All** resources support `metadata.name` and `metadata.namespace`.
+
       If you try touse a field selector on a Kubernetes resource that doesn't
       support it, Kubernetes will yell at you:
       ```bash
@@ -418,12 +456,22 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
       #> Error from server (BadRequest): Unable to find "ingresses" that match label selector "", field selector "foo.bar=baz": "foo.bar" is not a known field selector: only "metadata.name", "metadata.namespace"
       ```
 
-   1. Here's a table of example labels you might use in production:
-      | Key	| Description | Example | Type |
-      |-----|-------------|---------|------|
-      | app.kubernetes.io/name | The name of the application | mysql | string |
-      | app.kubernetes.io/instance | A unique name identifying the instance of an application | wordpress-abcxzy | string | 
-      | app.kubernetes.io/version | The current version of the application (e.g., a semantic version, revision hash, etc.) | 	5.7.21 | string |
-      | app.kubernetes.io/component | The component within the architecture | database | string |
-      | app.kubernetes.io/part-of | The name of a higher level application this one is part of | wordpress | string |
-      |app.kubernetes.io/managed-by	| The tool being used to manage the operation of an application | helm	| string |
+2. Here's a table of example labels you might use in production:
+   | Key	                     | Description                                                               | Example          | Type   |
+   |------------------------------|---------------------------------------------------------------------------|------------------|--------|
+   |`app.kubernetes.io/name`      | name of the application                                                   | mysql            | string |
+   |`app.kubernetes.io/instance`  | a unique name identifying the instance of an application                  | wordpress-abcxzy | string | 
+   |`app.kubernetes.io/version`   | current version of the application (e.g. semantic version, revision hash) | 5.7.21           | string |
+   |`app.kubernetes.io/component` | component within the architecture                                         | database         | string |
+   |`app.kubernetes.io/part-of`   | name of a higher level application this one is part of                    | wordpress        | string |
+   |`app.kubernetes.io/managed-by`| tool being used to manage the operation of an application                 | helm             | string |
+   |`app.kubernetes.io/component` | The component within the architecture                                     | database         | string |
+   |`app.kubernetes.io/part-of`   | The name of a higher level application this one is part of                | wordpress        | string |
+   |`app.kubernetes.io/managed-by`| The tool being used to manage the operation of an application             | helm             | string |
+
+<a href="#top">Back to top</a>
+
+
+---
+
+
