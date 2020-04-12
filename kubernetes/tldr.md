@@ -1,5 +1,8 @@
 # tl;dr Kubernetes
 
+> **Prerequisites**:
+> * Be comfortable with YAML and JSON.
+
 ## Quick Links
 * [Visit the Kubectl Wiki](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)
 * [Read the Kubectl Book](https://kubectl.docs.kubernetes.io/)
@@ -7,21 +10,24 @@
 
 
 ## Table of Contents
-1. [ Introduction ](#introduction)
-1. [ Install Kubectl ](#install-kubectl)
-1. [ Install Minikube ](#install-minikube)
-1. [ Minikube Cookbook ](#minikube-cookbook)
-1. [ Concepts ](#concepts)
-   1. [ Objects ](#concepts-objects)
-   1. [ Pods ](#concepts-pods)
-   1. [ Namespaces ](#concepts-namespaces)
-   1. [ Labels and Selectors ](#concepts-labelsandselectors)
-   1. []
+- [tl;dr Kubernetes](#tldr-kubernetes)
+  - [Quick Links](#quick-links)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Install Kubectl](#install-kubectl)
+  - [Install Minikube](#install-minikube)
+  - [Minikube Cookbook](#minikube-cookbook)
+  - [Concepts](#concepts)
+    - [Objects](#objects)
+    - [Pods](#pods)
+    - [Namespaces](#namespaces)
+    - [Labels and Selectors](#labels-and-selectors)
+    - [Field Selectors](#field-selectors)
 
 
 ----
 
-
+   
 <a name="introduction"></a>
 ## Introduction
 Kubernetes (sometimes written as k8s) coordinates a highly available cluster
@@ -39,7 +45,11 @@ _"resources"_:
     Each node has a __Kubelet__, which is an agent
     for managing the node and communicating with the Kubernetes master. 
 
-When you deploy applications on Kubernetes, you tell the master to start the application containers. The master schedules the containers to run on the cluster's nodes. The nodes communicate with the master using the Kubernetes API, which the master exposes. End users can also use the Kubernetes API directly to interact with the cluster.
+When you deploy applications on Kubernetes, you tell the master to start the
+application containers. The master schedules the containers to run on the
+cluster's nodes. The nodes communicate with the master using the Kubernetes API,
+which the master exposes. End users can also use the Kubernetes API directly to
+interact with the cluster.
 
 >> **For production**: A Kubernetes cluster should have at least 3 workers. 
 
@@ -208,6 +218,7 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 
 --- 
 
+
 <a name="concepts"></a>
 ## Concepts 
 
@@ -229,6 +240,7 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 <a href="#top">Back to top</a>
 
 
+--- 
 
 
 <a name="concepts-pods"></a>
@@ -245,8 +257,9 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
       of multiple co-located containers that are tightly coupled and need to share resources.
       This pod pattern will be referred to as a `multi-container pod`.
 
-   
+<a href="#top">Back to top</a>
 
+--- 
 
 
 <a name="concepts-namespaces"></a>
@@ -318,13 +331,19 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
    # Not in a namespace
    kubectl api-resources --namespaced=false
    ```
+
+<a href="#top">Back to top</a>
+
+
+--- 
       
+
 <a name="concepts-labelsandselectors"></a>
 ### Labels and Selectors
-1. **Labels** are key-value pairs that are attached to objects, and are intended to be used to
-   specify identifying attributes of objects that are meaningful and relevant to users.
-   Use labels to organize, select, or filter subsets of objects. Labels can be attached upon
-   the time of creation, and subsequently added and modified at any time.
+
+
+   1. **Labels** are key-value pairs that are attached to objects, and are intended to be used to specify identifying attributes of objects that are meaningful and relevant to users. Use labels to organize, select, or filter subsets of objects. Labels can be attached upon the time of creation, and subsequently added and modified at any time.
+   
    ```json
    "metadata": {
       "labels": {
@@ -340,30 +359,71 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
       ```bash
       kubectl get pods -l environment=production,tier=!frontend
       ```
-      Here, we are querying for all pods with an 'environment' key equal to 'production',
-      and a 'tier' key not equal to 'frontend' (this includes pods where the value of 'tier' 
-      is empty). 
+      Here, we are querying for all pods with an 'environment' key equal to
+      'production', and a 'tier' key not equal to 'frontend' (this includes pods
+      where the value of 'tier' is empty). 
    
-   1. _Set based_ selection uses `in`, `notin`, and `exists`. Here's an exmple query:
+   1. _Set based_ selection uses `in`, `notin`, and `exists`. Here's an exmple
+      query:
       ```bash
       kubectl get pods -l 'environment in (production, qa)'
       ```
-      Here, we are querying for all pods whose 'environment' is equal to either 'production'
-      or 'qa'. Set based expressions are generally more expressive than equality based, but
-      take some more getting used to.
+      Here, we are querying for all pods whose 'environment' is equal to either
+      'production' or 'qa'. Set based expressions are generally more expressive
+      than equality based, but take some more getting used to.
 
-1. Non-identifying information can be added to the metadata values as an _annotation_:
-   ```json
-   "metadata": {
-      "annotations": {
-         "key1" : "value1",
-         "key2" : "value2"
+
+   1. Non-identifying information can be added to the metadata values as an
+      _annotation_:
+      ```json
+      "metadata": {
+         "annotations": {
+            "key1" : "value1",
+            "key2" : "value2"
+         }
       }
-   }
-   ```
-   You can use the annotations for the following, but how you choose to use them is purely
-   up to your and your organization's standards.
-      * Pointers to logging, monitoring, analytics, or audit repositories.
-      * Phone or pager numbers of persons responsible.
-      * A link to documentation for the running application.
+      ```
+      You can use the annotations for the following, but how you choose to use
+      them is purely up to your and your organization's standards.
+         * Pointers to logging, monitoring, analytics, or audit repositories.
+         * Phone or pager numbers of persons responsible.
+         * A link to documentation for the running application.
+
+ <a href="#top">Back to top</a>
+
+
+--- 
+
+
+<a name="concepts-fieldselectors"></a>
+### Field Selectors
+
+   1. **Field selectors** let you select resources based on the value of one or
+      more resouce fields. Similar to label selectors, we use _equality-based_
+      operators (`=`, `==`, and `!=`), and can daisy-chain selectors
+      together with commas. However, unlike label selectors, 
+      **set-based operators will not work.**
+      ```bash
+      kubectl get pods --field-selector=status.phase!=Running,spec.restartPolicy=Always
+      ```
       
+   1. Some things to keep in mind:
+      1. Not all Kubernetes resources have support for field selectors.
+      1. **All** resources support `metadata.name` and `metadata.namespace`.
+   
+      If you try touse a field selector on a Kubernetes resource that doesn't
+      support it, Kubernetes will yell at you:
+      ```bash
+      kubectl get ingress --field-selector foo.bar=baz
+      #> Error from server (BadRequest): Unable to find "ingresses" that match label selector "", field selector "foo.bar=baz": "foo.bar" is not a known field selector: only "metadata.name", "metadata.namespace"
+      ```
+
+   1. Here's a table of example labels you might use in production:
+      | Key	| Description | Example | Type |
+      |-----|-------------|---------|------|
+      | app.kubernetes.io/name | The name of the application | mysql | string |
+      | app.kubernetes.io/instance | A unique name identifying the instance of an application | wordpress-abcxzy | string | 
+      | app.kubernetes.io/version | The current version of the application (e.g., a semantic version, revision hash, etc.) | 	5.7.21 | string |
+      | app.kubernetes.io/component | The component within the architecture | database | string |
+      | app.kubernetes.io/part-of | The name of a higher level application this one is part of | wordpress | string |
+      |app.kubernetes.io/managed-by	| The tool being used to manage the operation of an application | helm	| string |
