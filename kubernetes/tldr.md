@@ -223,28 +223,6 @@
 <a name="concepts"></a>
 ## Concepts 
 
-   <a name="concepts-objects"></a>
-   ### Objects
-
-   1. _Objects_ are persistent entities that Kubernetes uses to represent the state 
-      of the cluster; specifically:
-      * What containerized applications are running (and on which nodes).
-      * The resources available to those applications.
-      * The policies around how those applications behave; e.g. restart policies, upgrades, 
-         and fault-tolerance.
-
-   1. Kubernetes will work to make sure that your application's current state is the same as 
-      it's desired state. 
-      * Every object has a **status** attribute, which describes the _current state_ of the object.
-      * You can declare the **spec** attribute of the object when creating a Kubernetes object, 
-      which describes the _desired state_ of the resource. 
-
-   <a href="#top">Back to top</a>
-
-
---- 
-
-
    <a name="concepts-workernodes"></a>
    ### Worker Nodes
 
@@ -293,15 +271,15 @@
    ### Pods
 
    1. A **pod** is a collection of containers that share resources, have a
-   single IP, and can share volumes. A pod encapsulates 
-   an application's container(s), storage resources, a unique IP, and options that govern 
-   how the container(s) should run. **Pods run on worker nodes.**
+      single IP, and can share volumes. A pod encapsulates 
+      an application's container(s), storage resources, a unique IP, and options that govern 
+      how the container(s) should run. **Pods run on worker nodes.**
 
-   1. You can mix-and-match either of the following pod patterns to fit the specific need of
-   an application you're developing. You are not married to a single pattern.
+   1. You can use one of the following pod composition patterns to fit the specific need of
+      an application you're developing. You are not married to a single pattern.
 
       1. In _one-container-per-pod_, think of a Pod as a wrapper around a single container, 
-      and Kubernetes will just manage the Pods rather than the containers, directly.
+      and Kubernetes will just manage the Pods rather than the containers directly.
       This pod pattern will be referred to as a `singleton pod`.
 
       1. In _multiple-containers-per-pod_, a Pod might encapsulate an application composed 
@@ -324,7 +302,32 @@
          - name: myapp-container
             image: busybox
             command: ['sh', '-c', 'echo Hello Kubernetes! && sleep 3600']
+            restartPolicy: 
       ```
+
+   1. Kubernetes will work to make sure that your application's current state is the same as 
+      it's desired state using the following:
+      * Every object has a `status` attribute, which describes the _current state_ of the object.
+      * You can declare the `spec` attribute of the object when creating a Kubernetes object, 
+      which describes the _desired state_ of the resource. 
+
+   1. The `spec` may contain a `restartPolicy` with the possible values {`Always`, `OnFailure`,
+      `Never`} (default=`Always`). Exited Containers that are restarted by the kubelet are restarted with an exponential back-off delay (10s, 20s, 40s …) capped at five minutes, and is reset after ten minutes of successful execution. 
+
+   1. The _kubelet service_ that runs on the worker node hosting the pod has the ability to
+      perform, and react to, one of three kinds of **probes** on a container:
+
+      1. `livenessProbe`:  Indicates whether the Container is running. If the liveness probe fails, the kubelet kills the Container, and the Container is subjected to its `restartPolicy`. If a Container does not provide a liveness probe, the default state is Success.
+         * When to use: If you’d like your Container to be killed and restarted if a probe fails, then specify a liveness probe, and specify a `restartPolicy` of `Always` or `OnFailure`.
+      
+      1. `readinessProbe`: Indicates whether the Container is ready to service requests. If the readiness probe fails, the endpoints controller removes the Pod’s IP address from the endpoints of all Services that match the Pod. If a Container does not provide a readiness probe, the default state is `Success`.
+         * When to use: If you’d like to start sending traffic to a Pod only when a probe succeeds, specify a readiness probe. 
+
+      1. `startupProbe`: Indicates whether the application within the Container is started. All other probes are disabled if a startup probe is provided, until it succeeds. If the startup probe fails, the kubelet kills the Container, and the Container is subjected to its `restartPolicy`. If a Container does not provide a startup probe, the default state is `Success`.
+         * When to use: If your Container usually starts in more than `initialDelaySeconds` + `failureThreshold` × `periodSeconds`, you should specify a startup probe that checks the same endpoint as the liveness probe. You should set `failureThreshold` high enough to allow the Container to start, without changing the default values of the liveness probe. This helps to protect against deadlocks.
+
+      
+
 
    1. Any container in a Pod can enable `privileged` mode, which is useful for containers
       attempting to manipulate the network stack, accessing devices, etc... It should be
@@ -349,11 +352,11 @@
       applications accidently.
    
    1. There are a few things to keep in mind about namespaces:
-      1. Namespaces provide a scope for names.
-      1. Resource names must be unique within the namespace; 
+      * Namespaces provide a scope for names.
+      * Resource names must be unique within the namespace; 
          but can be repeated across namespaces.
-      1. You cannot nest namespaces.
-      1. A Kubernetes resource can only exist in one namespace.
+      * You cannot nest namespaces.
+      * A Kubernetes resource can only exist in one namespace.
 
 
    1. View existing namespaces with the following command:
@@ -378,10 +381,10 @@
       kubectl create namespace <your-new-namespace>
       ```
       Your namespace name must:
-      * contain at most 63 characters
-      * contain only lowercase alphanumeric characters or ‘-’
-      * start with an alphanumeric character
-      * end with an alphanumeric character
+         * contain at most 63 characters
+         * contain only lowercase alphanumeric characters or ‘-’
+         * start with an alphanumeric character
+         * end with an alphanumeric character
 
       When you create a service, Kubernetes creates a corresponding DNS entry of the form
       `<service-name>.<namespace-name>.svc.cluster.local`, which means that if a container just uses
@@ -421,8 +424,8 @@
 --- 
       
 
-<a name="concepts-labelsandselectors"></a>
-### Labels and Selectors
+   <a name="concepts-labelsandselectors"></a>
+   ### Labels and Selectors
 
    1. **Labels** are key-value pairs that are attached to objects, and are
       intended to be used to specify identifying attributes of objects that are meaningful and
