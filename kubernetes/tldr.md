@@ -11,18 +11,15 @@
 
 
 ## Table of Contents
-- [tl;dr Kubernetes](#tldr-kubernetes)
-  - [Quick Links](#quick-links)
-  - [Table of Contents](#table-of-contents)
-  - [Introduction](#introduction)
-  - [Install Kubectl](#install-kubectl)
-  - [Install Minikube](#install-minikube)
-  - [Minikube Cookbook](#minikube-cookbook)
-  - [Concepts](#concepts)
-    - [Worker Nodes](#worker-nodes)
-    - [Pods](#pods)
-    - [Namespaces](#namespaces)
-    - [Labels and Selectors](#labels-and-selectors)
+   * [Introduction](#introduction)
+   * [Install Kubectl](#install-kubectl)
+   * [Install Minikube](#install-minikube)
+   * [Minikube Cookbook](#minikube-cookbook)
+   * [Concepts](#concepts)
+      * [Worker Nodes](#worker-nodes)
+      * [Pods](#pods)
+      * [Namespaces](#namespaces)
+      * [Labels and Selectors](#labels-and-selectors)
 
 
 ----
@@ -53,7 +50,7 @@
 
 >> **For production**: A Kubernetes cluster should have at least 3 workers. 
 
-<a href="#top">Back to top</a>
+   [Back to top](#quick-links)
 
 
 ----
@@ -100,7 +97,7 @@
 
    </details>
 
-   <a href="#top">Back to top</a>
+   [Back to top](#quick-links)
 
 
 ----
@@ -179,9 +176,10 @@
          ```bash
          minikube stop
          ```
-</details>
+   </details>
 
-<a href="#top">Back to top</a>
+
+   [Back to top](#quick-links)
 
 
 ----
@@ -213,7 +211,7 @@
       As you can see by `hello-minikube`'s READY value of 0/1, it's NOT ready. The container named
       `back2thefuture` is what you should see when your container is up and running.
 
-   <a href="#top">Back to top</a>
+   [Back to top](#quick-links)
 
 
 --- 
@@ -260,7 +258,7 @@
          version, Kubernetes version (kubelet and kube-proxy version), Docker
          version (if used), and OS name.
 
-   <a href="#top">Back to top</a>
+   [Back to top](#quick-links)
 
 
 ---
@@ -336,7 +334,7 @@
       >> **VULNERABILITY**: Privileged containers can be used for evil; see
       [Runtimes And the Curse of the Privileged Container](https://brauner.github.io/2019/02/12/privileged-containers.html).
 
-   <a href="#top">Back to top</a>
+   [Back to top](#quick-links)
 
 
 --- 
@@ -417,7 +415,7 @@
       kubectl api-resources --namespaced=false
       ```
 
-   <a href="#top">Back to top</a>
+   [Back to top](#quick-links)
 
 
 --- 
@@ -505,7 +503,9 @@
       |`app.kubernetes.io/part-of`   | The name of a higher level application this one is part of                | wordpress        | string |
       |`app.kubernetes.io/managed-by`| The tool being used to manage the operation of an application             | helm             | string |
 
-   <a href="#top">Back to top</a>
+   [Back to top](#quick-links)
 
 
 ---
+
+
