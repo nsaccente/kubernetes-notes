@@ -25,7 +25,6 @@
 ----
 
    
-<a name="introduction"></a>
 ## Introduction
    Kubernetes (sometimes written as k8s) coordinates a highly available cluster
    of computers to work as a single unit by automating the distribution and
@@ -35,11 +34,10 @@
    * __Master__: Resposible for managing the cluster; i.e. scheduling, scaling
       applications, rolling out updates, and maintaining applications' desired
       state.
-   * __Worker__: A node is a VM or a physical computer that serves as a worker
+   *  __Worker Node__: A VM or a physical computer that serves as a worker
       machine in a Kubernetes cluster. 
-      
-      
-      Each node has a __Kubelet__, which is an agent
+
+      Each worker node has a __Kubelet__, which is an agent
       for managing the node and communicating with the Kubernetes master. 
 
    When you deploy applications on Kubernetes, you tell the master to start the
@@ -56,7 +54,6 @@
 ----
 
 
-<a name="install-kubectl"></a>
 ## Install Kubectl
 
    **[Visit the Kubectl Wiki](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)**
@@ -103,7 +100,6 @@
 ----
 
 
-<a name="install-minikube"></a>
 ## Install Minikube
 
    **[Visit the Minikube Wiki](https://minikube.sigs.k8s.io/docs/)**
@@ -217,10 +213,8 @@
 --- 
 
 
-<a name="concepts"></a>
 ## Concepts 
 
-   <a name="concepts-workernodes"></a>
    ### Worker Nodes
 
    1. A **worker node** (referred to simply as _node_ in the Kubernetes
@@ -264,7 +258,6 @@
 ---
 
 
-   <a name="concepts-pods"></a>
    ### Pods
 
    1. A **pod** is a collection of containers that share resources, have a
@@ -286,7 +279,7 @@
    1. You will seldom manually create pods in Kubernetes. Pods are disposable entities,
       which exists until the pod is terminated, deleted, fails, or is _evicted_.
       Typically, we let a _controller_ handle the creation of pods by giving it a 
-      **Pod Template**, i.e.:
+      **Pod Template** (AKA Pod Config, Pod Recipe), i.e.:
       ```yaml
       apiVersion: v1
       kind: Pod
@@ -322,9 +315,34 @@
 
       1. `startupProbe`: Indicates whether the application within the Container is started. All other probes are disabled if a startup probe is provided, until it succeeds. If the startup probe fails, the kubelet kills the Container, and the Container is subjected to its `restartPolicy`. If a Container does not provide a startup probe, the default state is `Success`.
          * When to use: If your Container usually starts in more than `initialDelaySeconds` + `failureThreshold` × `periodSeconds`, you should specify a startup probe that checks the same endpoint as the liveness probe. You should set `failureThreshold` high enough to allow the Container to start, without changing the default values of the liveness probe. This helps to protect against deadlocks.
-
-      
-
+   
+   1. **Init Containers** are containers that must run to completion, one at a time, before
+      anything else is ran. Init Containers can be used for installing build-tools, compiling
+      code from source, forcing the pod to wait before starting, cloning a Git repository into
+      a volume, etc. Below is an example of InitContainers in a Pod Recipe.
+      ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+      name: myapp-pod
+      labels:
+         app: myapp
+      spec:
+      containers:
+      - name: myapp-container
+         image: busybox:1.28
+         command: ['sh', '-c', 'echo The app is running! && sleep 3600']
+      initContainers:
+      - name: init-myservice
+         image: busybox:1.28
+         command: ['sh', '-c', "until nslookup myservice.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for myservice; sleep 2; done"]
+      - name: init-mydb
+         image: busybox:1.28
+         command: ['sh', '-c', "until nslookup mydb.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for mydb; sleep 2; done"]
+      ```
+      If either `init-myservice` or `init-mydb` fail for any reason, Kubernetes will restart 
+      the Pod. These two InitContainers must run to completion before `myapp-container` will
+      start.
 
    1. Any container in a Pod can enable `privileged` mode, which is useful for containers
       attempting to manipulate the network stack, accessing devices, etc... It should be
@@ -334,13 +352,19 @@
       >> **VULNERABILITY**: Privileged containers can be used for evil; see
       [Runtimes And the Curse of the Privileged Container](https://brauner.github.io/2019/02/12/privileged-containers.html).
 
+
+   **Advanced Topics:** 
+   * [Pod Readiness Gates](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-readiness-gate)
+   * [Pod Presets](https://kubernetes.io/docs/concepts/workloads/pods/podpreset/)
+   * [Pod Topology Spread Constraits](https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/)
+   * [Disruptions](https://kubernetes.io/docs/concepts/workloads/pods/disruptions/)
+
    [Back to top](#quick-links)
 
 
 --- 
 
 
-   <a name="concepts-namespaces"></a>
    ### Namespaces 
  
    1. A **namespace** is a virtual cluster backed by a physical cluster. Think of it as 
@@ -421,7 +445,6 @@
 --- 
       
 
-   <a name="concepts-labelsandselectors"></a>
    ### Labels and Selectors
 
    1. **Labels** are key-value pairs that are attached to objects, and are
@@ -509,3 +532,4 @@
 ---
 
 
+   ### Replica Sets
