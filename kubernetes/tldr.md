@@ -21,7 +21,6 @@
     - [Objects](#objects)
     - [Worker Nodes](#worker-nodes)
     - [Pods](#pods)
-    - [Namespaces](#namespaces)
     - [Labels and Selectors](#labels-and-selectors)
 
 
@@ -326,8 +325,7 @@ an application you're developing. You are not married to a single pattern.
    noted that whichever container runtime you use, whether it be Docker or a VM, must
    support the concept of a privileged container for this to work.
 
-   > [!VULNERABILITY]
-   > Privileged containers can be used for evil; see
+   >> **Security Issue**: Privileged containers can be used for evil; see
      [Runtimes And the Curse of the Privileged Container](https://brauner.github.io/2019/02/12/privileged-containers.html).
 
 
@@ -337,12 +335,7 @@ an application you're developing. You are not married to a single pattern.
 
 --- 
 
-
-<a name="concepts-namespaces"></a>
-### Namespaces
-1. A _namespace_ is a virtual cluster backed by a physical cluster. Think of it as a way for 
-two teams in the same organization to build separate applications on the same hardware 
-without the need to worry about interfering with the other team's applications accidently.
+<a name="concepts-namespaces"></a> ### Namespaces 1. A _namespace_ is a virtual cluster backed by a physical cluster. Think of it as a way for two teams in the same organization to build separate applications on the same hardware without the need to worry about interfering with the other team's applications accidently.
 There are a few things to keep in mind about namespaces:
 1. Namespaces provide a scope for names.
 2. Resource names must be unique within the namespace; but can be repeated across namespaces.
