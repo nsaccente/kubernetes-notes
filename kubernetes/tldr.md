@@ -303,6 +303,9 @@ an application you're developing. You are not married to a single pattern.
    of multiple co-located containers that are tightly coupled and need to share resources.
    This pod pattern will be referred to as a `multi-container pod`.
 
+1. You will seldom manually create pods in Kubernetes. Pods are disposable entities,
+   which exists until the pod is terminated, deleted, fails, or is _evicted_.
+ 
 <a href="#top">Back to top</a>
 
 --- 
