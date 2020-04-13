@@ -19,7 +19,6 @@
   - [Install Minikube](#install-minikube)
   - [Minikube Cookbook](#minikube-cookbook)
   - [Concepts](#concepts)
-    - [Objects](#objects)
     - [Worker Nodes](#worker-nodes)
     - [Pods](#pods)
     - [Namespaces](#namespaces)
@@ -510,5 +509,3 @@
 
 
 ---
-
-
