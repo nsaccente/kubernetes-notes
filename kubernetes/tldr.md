@@ -1,7 +1,8 @@
 # tl;dr Kubernetes
 
 > **Prerequisites**:
-> * Be comfortable with YAML and JSON.
+> * Be comfortable with YAML ✍️ 
+>   * [YAML in One Video](https://www.youtube.com/watch?time_continue=83&v=cdLNKUoMc6c&feature=emb_title)
 
 ## Quick Links
 * [Visit the Kubectl Wiki](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)
