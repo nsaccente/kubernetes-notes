@@ -258,10 +258,7 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
       1. polling a URL for new pod configs to download and run
       1. from the Kubernetes API server
 
-1. The worker node can be described through the following:
-   ```bash
-   kubectl describe node <name-of-your-node>
-   ```
+1. The worker node can be described with `kubectl describe node <name-of-your-node>` 
    and describes the following:
    1. **Networking stuff**
       1. `HostName`: hostname reported by the worker node’s kernel
