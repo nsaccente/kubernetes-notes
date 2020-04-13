@@ -290,7 +290,7 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 1. A **pod** is a collection of containers that share resources, have a
 single IP, and can share volumes. A pod encapsulates 
 an application's container(s), storage resources, a unique IP, and options that govern 
-how the container(s) should run.
+how the container(s) should run. **Pods run on worker nodes.**
 
 1. You can mix-and-match either of the following pod patterns to fit the specific need of
 an application you're developing. You are not married to a single pattern.
@@ -305,8 +305,35 @@ an application you're developing. You are not married to a single pattern.
 
 1. You will seldom manually create pods in Kubernetes. Pods are disposable entities,
    which exists until the pod is terminated, deleted, fails, or is _evicted_.
- 
+   Typically, we let a _controller_ handle the creation of pods by giving it a 
+   **Pod Template**, i.e.:
+   ```yaml
+   apiVersion: v1
+   kind: Pod
+   metadata:
+      name: myapp-pod
+      labels:
+         app: myapp
+   spec:
+      containers:
+      - name: myapp-container
+         image: busybox
+         command: ['sh', '-c', 'echo Hello Kubernetes! && sleep 3600']
+   ```
+
+1. Any container in a Pod can enable `privileged` mode, which is useful for containers
+   attempting to manipulate the network stack, accessing devices, etc... It should be
+   noted that whichever container runtime you use, whether it be Docker or a VM, must
+   support the concept of a privileged container for this to work.
+
+   > [!VULNERABILITY]
+   > Privileged containers can be used for evil; see
+     [Runtimes And the Curse of the Privileged Container](https://brauner.github.io/2019/02/12/privileged-containers.html).
+
+
+
 <a href="#top">Back to top</a>
+
 
 --- 
 
