@@ -22,6 +22,7 @@
     - [Objects](#objects)
     - [Worker Nodes](#worker-nodes)
     - [Pods](#pods)
+    - [Namespaces](#namespaces)
     - [Labels and Selectors](#labels-and-selectors)
 
 
@@ -284,6 +285,16 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 
 ---
 
+[luna]:: (a, b, c)
+   <!--
+   func():
+   Hey guys
+   
+
+   this is a function in lunascript
+   -->
+
+
 
 <a name="concepts-pods"></a>
 ### Pods
@@ -326,8 +337,9 @@ an application you're developing. You are not married to a single pattern.
    noted that whichever container runtime you use, whether it be Docker or a VM, must
    support the concept of a privileged container for this to work.
 
-   >> **Security Issue**: Privileged containers can be used for evil; see
+   >> **VULNERABILITY**: Privileged containers can be used for evil; see
      [Runtimes And the Curse of the Privileged Container](https://brauner.github.io/2019/02/12/privileged-containers.html).
+
 
 
 
@@ -336,31 +348,39 @@ an application you're developing. You are not married to a single pattern.
 
 --- 
 
-<a name="concepts-namespaces"></a> ### Namespaces 1. A _namespace_ is a virtual cluster backed by a physical cluster. Think of it as a way for two teams in the same organization to build separate applications on the same hardware without the need to worry about interfering with the other team's applications accidently.
+<a name="concepts-namespaces"></a>
+
+ ### Namespaces 
+ 
+1. A **namespace** is a virtual cluster backed by a physical cluster. Think of it as 
+   a way for two teams in the same organization to build separate applications on the
+   same hardware without the need to worry about interfering with the other team's
+   applications accidently.
 There are a few things to keep in mind about namespaces:
 1. Namespaces provide a scope for names.
-2. Resource names must be unique within the namespace; but can be repeated across namespaces.
-3. You cannot nest namespaces.
-4. A Kubernetes resource can only exist in one namespace.
+1. Resource names must be unique within the namespace; but can be repeated across namespaces.
+1. You cannot nest namespaces.
+1. A Kubernetes resource can only exist in one namespace.
 
-5. View existing namespaces with the following command:
-```bash
-kubectl get namespaces
-#> NAME              STATUS   AGE
-#> default           Active   154m
-#> kube-node-lease   Active   154m
-#> kube-public       Active   154m
-#> kube-system       Active   154m
-```
-* **default** - The default namespace for objects with no other namespace.
-* **kube-system** - The namespace for objects created by the Kubernetes System.
-* **kube-public** - This namespace is created automatically and is readable by all users
-		(including those not authenticated). This namespace is mostly reserved for 
-		cluster usage, in case that some resources should be visible and readable 
-		publicly throughout the whole cluster. This public aspect is purely 
-		convention and is not mandatory.
 
-2. You can create a namespace with the following:
+1. View existing namespaces with the following command:
+   ```bash
+   kubectl get namespaces
+   #> NAME              STATUS   AGE
+   #> default           Active   154m
+   #> kube-node-lease   Active   154m
+   #> kube-public       Active   154m
+   #> kube-system       Active   154m
+   ```
+   * **default** - The default namespace for objects with no other namespace.
+   * **kube-system** - The namespace for objects created by the Kubernetes System.
+   * **kube-public** - This namespace is created automatically and is readable by all users
+         (including those not authenticated). This namespace is mostly reserved for 
+         cluster usage, in case that some resources should be visible and readable 
+         publicly throughout the whole cluster. This public aspect is purely 
+         convention and is not mandatory.
+
+1. You can create a namespace with the following:
    ```bash
    kubectl create namespace <your-new-namespace>
    ```
@@ -377,7 +397,7 @@ kubectl get namespaces
    Production. If you want to reach across namespaces, you need to use the fully qualified domain
    name (FQDN).
 
-3. You can delete a namespace using the following, but be careful! This deletes everything in
+1. You can delete a namespace using the following, but be careful! This deletes everything in
    the namespace!
    ```bash
    kubectl delete namespace <your-old-namespace>
@@ -385,14 +405,14 @@ kubectl get namespaces
    * > **NOTE**: This delete is asynchronous, so you may see the namespace for a little while. 
                   Give it a second!
 
-4. It is not necessary to use multiple namespaces just to separate slightly different resources,
+1. It is not necessary to use multiple namespaces just to separate slightly different resources,
    such as different versions of the same software: use version labels to distinguish resources 
    within the same namespace. More on that later...
 
-5. Finally, you can specify the namespace to run a resource in with the `--namespace=<your_namespace>` flag.
+1. Finally, you can specify the namespace to run a resource in with the `--namespace=<your_namespace>` flag.
 
 
-6. As if this isn't confusing enough already, not all objects exist within a namespace. Use the
+1. As if this isn't confusing enough already, not all objects exist within a namespace. Use the
    following command:
    ```bash
    # In a namespace
@@ -477,7 +497,7 @@ kubectl get namespaces
       #> Error from server (BadRequest): Unable to find "ingresses" that match label selector "", field selector "foo.bar=baz": "foo.bar" is not a known field selector: only "metadata.name", "metadata.namespace"
       ```
 
-2. Here's a table of example labels you might use in production:
+1. Here's a table of example labels you might use in production:
    | Key	                     | Description                                                               | Example          | Type   |
    |------------------------------|---------------------------------------------------------------------------|------------------|--------|
    |`app.kubernetes.io/name`      | name of the application                                                   | mysql            | string |
