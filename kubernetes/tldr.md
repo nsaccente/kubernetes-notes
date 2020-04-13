@@ -222,8 +222,10 @@
 
 <a name="concepts"></a>
 ## Concepts 
-<a name="concepts-objects"></a>
+
+   <a name="concepts-objects"></a>
    ### Objects
+
    1. _Objects_ are persistent entities that Kubernetes uses to represent the state 
       of the cluster; specifically:
       * What containerized applications are running (and on which nodes).
@@ -242,8 +244,10 @@
 
 --- 
 
-<a name="concepts-workernodes"></a>
-### Worker Nodes
+
+   <a name="concepts-workernodes"></a>
+   ### Worker Nodes
+
    1. A **worker node** (referred to simply as _node_ in the Kubernetes
       documentation, which is misleading since node is a very overloaded
       term) can either be a VM or physical machine in a Kubernetes
@@ -285,8 +289,9 @@
 ---
 
 
-<a name="concepts-pods"></a>
-### Pods
+   <a name="concepts-pods"></a>
+   ### Pods
+
    1. A **pod** is a collection of containers that share resources, have a
    single IP, and can share volumes. A pod encapsulates 
    an application's container(s), storage resources, a unique IP, and options that govern 
@@ -334,8 +339,9 @@
 
 --- 
 
-<a name="concepts-namespaces"></a>
-### Namespaces 
+
+   <a name="concepts-namespaces"></a>
+   ### Namespaces 
  
    1. A **namespace** is a virtual cluster backed by a physical cluster. Think of it as 
       a way for two teams in the same organization to build separate applications on the
@@ -464,9 +470,6 @@
          * Pointers to logging, monitoring, analytics, or audit repositories.
          * Phone or pager numbers of persons responsible.
          * A link to documentation for the running application.
-
-   <a href="#top">Back to top</a>
-
 
    1. **Field selectors** let you select resources based on the value of one or
       more resouce fields. Similar to label selectors, we use _equality-based_
