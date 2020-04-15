@@ -532,4 +532,7 @@
 ---
 
 
-   ### Replica Sets
+   ### Replica Sets and Stateful Sets
+
+   1. To provide high availability of 
+   https://www.youtube.com/watch?v=GieXzb91I40
