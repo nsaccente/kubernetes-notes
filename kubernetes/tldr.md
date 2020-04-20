@@ -132,31 +132,10 @@
          as root.  If your system is using EFI Secure Boot you may need to sign the
          kernel modules (vboxdrv, vboxnetflt, vboxnetadp, vboxpci) before you can load
          them. Please see your Linux system's documentation for more information.
-
          ```
-         
-         You may need to do some extra work. You will need to
-         [install the proper kernel modules](https://stackoverflow.com/questions/49369065/rhel-this-system-is-currently-not-set-up-to-build-kernel-modules)
-         and
-         [add yourself to the **vboxusers** usergroup](https://linuxize.com/post/how-to-add-user-to-group-in-linux/#how-to-add-an-existing-user-to-a-group).
-         
-         ```bash
-         # Run each command one line at a time.
-         sudo -i
-         dnf install kernel-devel-`uname -r`
-         usermod -a -G vboxusers `whoami`
-         dnf install -y gcc make perl kernel-devel
-         cd /usr/src/vboxhost-<your-vbox-version-here>
-         mkdir kernel-signatures
-         cd kernel-signatures
-         openssl req -new -x509 -newkey rsa:2048 -keyout MOK.priv -outform DER -out MOK.der -nodes -days 36500 -subj "/CN=VirtualBox/"
 
-         /usr/src/kernels/`uname -r`/scripts/sign-file sha256 ./MOK.priv ./MOK.der $(modinfo -n vboxdrv)
-         /usr/src/kernels/`uname -r`/scripts/sign-file sha256 ./MOK.priv ./MOK.der $(modinfo -n vboxnetflt)
-         /usr/src/kernels/`uname -r`/scripts/sign-file sha256 ./MOK.priv ./MOK.der $(modinfo -n vboxnetadp)
-
-
-         ```
+         This may cause some extra complication, but I've found that the simplest
+         solution is to just disable secure boot in your bios.
 
       1. If you don't want to use a VM, use the `--driver=none` flag to run Kubernetes
          components directly on the host. Using this driver requires
