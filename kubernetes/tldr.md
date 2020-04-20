@@ -118,6 +118,46 @@
    1. Install either [KVM](https://www.linux-kvm.org/page/Main_Page) (which also
       uses QEMU) or [Virtualbox](https://www.virtualbox.org/wiki/Downloads).
 
+      1. If you are a **RHEL/CentOS/Fedora user installing VirtualBox**, you might encounter:
+         ```
+         This system is currently not set up to build kernel modules.
+         Please install the gcc make perl packages from your distribution.
+         Please install the Linux kernel "header" files matching the current kernel
+         for adding new hardware support to the system.
+         The distribution packages containing the headers are probably:
+            kernel-devel kernel-devel-5.3.7-301.fc31.x86_64
+
+         There were problems setting up VirtualBox.  To re-start the set-up process, run
+         /sbin/vboxconfig
+         as root.  If your system is using EFI Secure Boot you may need to sign the
+         kernel modules (vboxdrv, vboxnetflt, vboxnetadp, vboxpci) before you can load
+         them. Please see your Linux system's documentation for more information.
+
+         ```
+         
+         You may need to do some extra work. You will need to
+         [install the proper kernel modules](https://stackoverflow.com/questions/49369065/rhel-this-system-is-currently-not-set-up-to-build-kernel-modules)
+         and
+         [add yourself to the **vboxusers** usergroup](https://linuxize.com/post/how-to-add-user-to-group-in-linux/#how-to-add-an-existing-user-to-a-group).
+         
+         ```bash
+         # Run each command one line at a time.
+         sudo -i
+         dnf install kernel-devel-`uname -r`
+         usermod -a -G vboxusers `whoami`
+         dnf install -y gcc make perl kernel-devel
+         cd /usr/src/vboxhost-<your-vbox-version-here>
+         mkdir kernel-signatures
+         cd kernel-signatures
+         openssl req -new -x509 -newkey rsa:2048 -keyout MOK.priv -outform DER -out MOK.der -nodes -days 36500 -subj "/CN=VirtualBox/"
+
+         /usr/src/kernels/`uname -r`/scripts/sign-file sha256 ./MOK.priv ./MOK.der $(modinfo -n vboxdrv)
+         /usr/src/kernels/`uname -r`/scripts/sign-file sha256 ./MOK.priv ./MOK.der $(modinfo -n vboxnetflt)
+         /usr/src/kernels/`uname -r`/scripts/sign-file sha256 ./MOK.priv ./MOK.der $(modinfo -n vboxnetadp)
+
+
+         ```
+
       1. If you don't want to use a VM, use the `--driver=none` flag to run Kubernetes
          components directly on the host. Using this driver requires
          [Docker](https://www.docker.com/products/docker-desktop) and a Linux
