@@ -197,44 +197,12 @@
    [Back to top](#quick-links)
 
 
-----
-
-
-<a name="minikube-cookbook"></a>
-## Minikube Cookbook
-
-   1. Start a local Kubernetes cluster using the `minikube` bootstrap command:
-      ```bash
-      minikube start
-      ```
-
-   1. We will rely on `kubectl` to interact with the minikube cluster we've spun up.
-      Let's use `kubectl run <name-whatever-you-want>`, which provides a way to run a Docker
-      image on our Kubernetes cluster. 
-      ```bash
-      kubectl run hello-minikube --image=gcr.io/google_containers/echoserver:1.4 --port=8080
-      ```
-
-   1. It's going to take some time for the pod to be downloaded and started, but we can check the 
-      status of our pod using:
-      ```bash
-      kubectl get pod
-      #> NAME             READY   STATUS              RESTARTS   AGE
-      #> hello-minikube   0/1     ContainerCreating   0          4m33s
-      #> back2thefuture   1/1     Running             0          8m16s
-      ```
-      As you can see by `hello-minikube`'s READY value of 0/1, it's NOT ready. The container named
-      `back2thefuture` is what you should see when your container is up and running.
-
-   [Back to top](#quick-links)
-
-
---- 
-
+---
 
 ## Concepts 
 
    ### Worker Nodes
+   1. A 
 
    1. A **worker node** (referred to simply as _node_ in the Kubernetes
       documentation, which is misleading since node is a very overloaded
