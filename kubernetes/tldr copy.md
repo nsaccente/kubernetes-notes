@@ -29,15 +29,8 @@
    Welcome to a **No Nonsense** guide to Kubernetes. I promise to do my best to
    introduce material in a logical manner, provide production-centric examples,
    pepper in memes and gifs to keep things feeling fresh, and explain 
-   complicated material as simply as possible. If there's one thing I hate, 
-   it's fluff.
-
-   ![KubernetesComic](https://pbs.twimg.com/media/EDrZEKCWwAAG_Ty.jpg)
-
-   [Back to top](#quick-links)
-
-
-----
+   complicated material as simply as possible. If ther securityContext:
+      allowPrivilegeEscalation: false
 
 
 ## Install Kubectl
@@ -211,13 +204,13 @@ There are **four** top level properties to a Kubernetes config yaml:
   words, that the **spec** matches the **status** of the object.
 
 ```yaml
-#1 Version of K8s API to use.
+# 1. Version of K8s API to use.
 apiVersion: v1
 
-#2 Kind of object being created.
+# 2. Kind of object being created.
 kind: Pod
 
-#3 Describes K8s the object; "name" and "labels" are a few of many valid keys.
+# 3. Describes K8s the object; "name" and "labels" are a few of many valid keys.
 metadata:
    name: myapp-pod
    labels:
@@ -228,7 +221,7 @@ metadata:
       # While "app" and "type" seem like they may be important labels, they are
       # something that we will use to organize our objects. 
       
-#4 The desired state of the object which K8s will work to maintain.
+# 4. The desired state of the object which K8s will work to maintain.
 spec:
    containers:
       - name: nginx-container
@@ -271,7 +264,7 @@ metadata:
     guess_what: chicken_butt
 spec:
 
-  #1 Provides a template of a pod we wish to create when needed.
+  # 1. Provides a template of a pod we wish to create when needed.
   template:
     metadata:
       name: myapp-pod
@@ -284,12 +277,12 @@ spec:
         - name: nginx-container
           image: nginx
 
-  #2 This ReplicaSet will watch for all pods that have metadata.type: front-end
+  # 2. This ReplicaSet will watch for all pods that have metadata.type: front-end
   selector: 
     matchLabels:
       type: front-end
 
-  #3 Watch for 3 objects matching the above selector. 
+  # 3. Watch for 3 objects matching the above selector. 
   replicas: 3
 ```
 
@@ -408,17 +401,17 @@ spec:
 1. The Deployment automatically creates a ReplicaSet:
    ```bash
    kubectl get replicaset
-   # NAME                       DESIRED    CURRENT    READY    AGE
-   # myapp-deployment-abc123    3          3          3        2m
+   #> NAME                       DESIRED    CURRENT    READY    AGE
+   #> myapp-deployment-abc123    3          3          3        2m
    ```
 
 1. The ReplicaSet created by the Deployment will subsequently create Pods:
    ```bash
    kubectl get pods
-   # NAME                             READY STATUS   RESTARTS  AGE
-   # myapp-deployment-abc123-xyz001   1/1   Running  0         2m
-   # myapp-deployment-abc123-xyz002   1/1   Running  0         2m
-   # myapp-deployment-abc123-xyz003   1/1   Running  0         2m
+   #> NAME                             READY STATUS   RESTARTS  AGE
+   #> myapp-deployment-abc123-xyz001   1/1   Running  0         2m
+   #> myapp-deployment-abc123-xyz002   1/1   Running  0         2m
+   #> myapp-deployment-abc123-xyz003   1/1   Running  0         2m
    ```
 
 1. Now that we seem to be working with a bunch of different K8s objects, we can
@@ -461,13 +454,21 @@ to the production namespace.
 
 We can access K8s objects outside of the current namespace by referencing its 
 fully qualified domain name as configured by Kubernetes. For example:
-```java
-mysql.connect("db-service") // Accessing the service from within the namespace.
-mysql.connect("db-service.dev.svc.cluster.local") // Accessing a service outside of namespace.
-//             db-service                          Get me a K8s object called _,
-//                        dev                      from the namespace _,
-//                            svc                  of type _,
-//                                cluster.local    and with the domain name.
+```python
+# Access a service from within the namespace.
+mysql.connect("db-service")                       
+
+# Access a service from outside of namespace using that resource's full name.
+mysql.connect("db-service.dev.svc.cluster.local")
+# Object named db-service,
+#      from the namespace dev,
+#        a K8s object of type svc 
+#             with the domain name cluster.local
+
+
+# Playing with mnemonics to remember this for the CKAD exam:
+# name.space.type.domain
+# Nina Simone is a Taurus from Detroit
 ```
 
 You can run any `kubectl` command against a namespace of your chosing by
@@ -525,18 +526,19 @@ We can define a custom Namespace in one of two ways:
 ---
 
 
-![configfu](https://media.giphy.com/media/3ov9k6pbxOR7X144h2/giphy.gif)
-
 # Mastering Config-Fu
+
+![configfu](https://media.giphy.com/media/3ov9k6pbxOR7X144h2/giphy.gif)
 
 ## Commands and Arguents
 Let's say we have a Dockerfile that looks like this:
 ```Dockerfile
 FROM Ubuntu
+
 # the command that is run at startup. 
 ENTRYPOINT ["sleep"]
 
-# the arguments passed to the command. 
+# the arguments passed to the above command. 
 CMD ["5"]
 ```
 
@@ -622,14 +624,15 @@ spec:
       - name: simple-webapp-color
         image: simple-webapp-color
         
-        # Use the ConfigMap named app-config
+        # Use an existing ConfigMap named app-config
         envFrom:
            - configMapRef:
                 name: app-config 
 ```
 
-**Secrets** is very similar to a ConfigMap, except they are stored in an
-encoded format.
+**Secrets** are very similar to a ConfigMap, except they are stored in an
+encoded format. The values of `data.YOUR_KEY` must be encoded into base 64. To
+learn how to do this, see the comments in the config below.
 ```yaml
 apiVersion: v1
 kind: Secret
@@ -679,3 +682,191 @@ in a production environment. (tl;dr use
 [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/),
 [Google Cloud Key Management Service](https://cloud.google.com/kms/), or
 [Azure Key Vault](https://azure.microsoft.com/en-in/services/key-vault/)).
+
+[Back to top](#quick-links)
+
+
+---
+
+
+### Security Contexts
+Docker implements a set of security features which limits the abilities of the 
+container's root user. This means that, by default, the root user within a 
+container has a lot of Linux capabilities disabled, such as `CHOWN`, `DAC`,
+`KILL`, `SETFCAP`, `SETPCAP`, `SETGID`, `SETUID`, `NETBIND`, `NET_RAW`,
+`MAC_ADMIN`, `BROADCAST`, `NET_ADMIN`, `SYS_ADMIN`, and `SYS_CHROOT` to name a 
+few. To view a full list of linux capabilities, run the following:
+```bash
+cat /usr/include/linux/capability.h
+```
+
+If you want to make changes to the capabilities a Docker container has, you can 
+run one of the following:
+```bash
+docker run --cap-add MAC_ADMIN ubuntu  # adds a capability to a container
+docker run --cap-drop KILL ubuntu      # removes a capability from a container
+docker run --privileged ubuntu         # adds all capabilities to a container.
+```
+In Kubernetes, defining a set of enabled and disabled Linux capabilities is
+called a **Security Context**. We can apply a security contexts like so:
+``` yaml
+apiVersion: v1
+kind: Pod
+metadata:
+   name: mypod
+spec:
+
+   # 1
+   securityContext:
+      runAsUser: 1000
+      runAsGroup: 3000
+      fsGroup: 2000
+      capabilities:
+         add: ["MAC_ADMIN"]
+
+   containers:
+      - name: ubuntu
+        image: ubuntu
+        command: ["sleep", "3600"]
+        
+        # 2
+        securityContext:
+            capabilities:
+                add: ["NET_ADMIN"]
+
+
+
+      - name: some-other-thing 
+        image: some-other-thing
+        command: ["sleep", "3600"]
+
+        # 3
+        securityContext:
+            allowPrivilegeEscalation: false
+```
+Take note of the following:
+1. We are applying the following to all containers in the pod.
+   * **runAsUser**: specifies that for any containers in the Pod, all processes
+     will run with user ID 1000.
+   * **runAsGroup**: specifies the primary group ID of 3000 for all processes
+     within any containers of the Pod. If this field is omitted, the primary
+     group ID of the containers will be root(0).
+   * **fsGroup**: specifies a supplementary group that the containers belong 
+     to. In this case, containers in this Pod belong to supplementary group ID
+     2000.
+   
+2. We are applying the `NET_ADMIN` capability only to the `ubuntu` container.
+
+3. We are disabling privilege escalation only to the `some-other-thing` 
+   container.
+
+As you might imagine, there's actually quite a lot to security contexts, which
+you can read more about 
+[here](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container),
+but this should do for a tl;dr article for now.
+
+[Back to top](#quick-links)
+
+
+---
+
+
+### Service Accounts
+Authentication, Authorization, RBAC, etc...
+There are two types of accounts in K8s. A **user account** is used by admins,
+developers and... well... users! A **ServiceAccount** is used by machine; such
+as a system monitoring tool like Prometheus, or a build automation tool like 
+Jenkins. Let's create a service account:
+
+```bash
+kubectl create serviceaccount my-serviceacct
+```
+
+Let's list the service accounts that exist within our NameSpace.
+
+```bash
+kubectl get serviceaccounts
+#> NAME            SECRETS     AGE
+#> default         1           10d
+#> my-serviceacct  1           15s
+```
+
+Notice that there are two ServiceAccounts when we run the above command. Some
+things to be aware of:
+ * For every NameSpace in Kubernetes, a ServiceAccount named `default` is
+   automatically created.
+ * Each NameSpace has its own default ServiceAccount.
+ * Whenever a Pod is created, the default ServiceAccount, and its token,
+   are automagically mounted to that Pod as a VolumeMount. If you were to run
+   ```bash
+   kubectl describe pod some-application
+   #> Name:
+   #> Namespace:
+   #> ... 
+   #> Mounts:
+   #>   /var/run/secrets/kubernetes.io/serviceaccount from default-token-abc123
+   ```
+   The `default` ServiceAccount is very limited, and only has permission to run
+   basic K8s API queries.
+
+This is because **whenever a new NameSpace is created, an accompanying `default`
+service account is created. Each namespace has its own default ServiceAccount.**
+Now, let's get the details of the ServiceAccount that we just created:
+
+```bash
+kubectl describe serviceaccount my-serviceacct
+#> Name:                 my-serviceacct
+#> Namespace:            default
+#> Labels:               <none>
+#> Annotations:          <none>
+#> Image pull secrets:   <none>
+#> Mountable secrets:    my-serviceacct-token-kbbdm
+#> Tokens:               my-serviceacct-token-kbbdm
+#> Events:               <none>
+```
+
+Notice there is a `Tokens` field with a single element by the name
+`my-serviceacct-token-kbbdm`. This object is a Secret, which contains an API
+token which will be used to authenticate applications wishing to utilize the
+service account. We can get the API Token of `my-serviceacct-token-kbbdm` by
+running the following command:
+```bash
+kubectl describe secret my-serviceacct-token-kbbdm
+#> Name:          my-serviceacct-token-kbbdm
+#> Namespace:     default
+#> Labels:        <none>
+
+#> Type:          kubernetes.io/service-account-token
+
+#> Data
+#> ====
+#> ca.crt:        1025 bytes
+#> namespace:     7 bytes
+#> token:
+#> jkhfdisuHfiweurfhEKfjheifuHWEFiuwehtjHEfKJHEFKLJhefKJefheL
+#> AD1dY0UKn0wThAtThIsT0K3nIsT0ta11ymad3UPl0Lk33puRT0K3NzSaF3
+#> DSAf98540fwoeifhjOEfowiej54o3iojFoiJ
+```
+
+We can attach this token as an authentication header to `curl`, or put this
+token into a 3rd party application that interacts with our K8s cluster.
+As said in one of the bullets above, whenever a Pod is created, the `default`
+ServiceAccount is mounted as a Volume. We can change the ServiceAccount that 
+gets mounted to a Pod like so:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+   name: my-app
+spec:
+   containers:
+      - name: my-app
+        image: my-app
+
+   # You can select one of the following two lines. They are mutually exclusive.
+   serviceAccount: my-serviceacct
+   automountServiceAccountToken: false
+```
+**NOTE**: You cannot change the ServiceAccount being used by an existing Pod,
+however, you can update the ServiceAccount used by `containers` of Deployment
+objects, thanks to rolling upgrade of the Pods associated with the Deployment.
