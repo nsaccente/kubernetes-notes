@@ -1,0 +1,22 @@
+#1 Version of K8s API to use.
+apiVersion: v1
+
+#2 Kind of object being created.
+kind: Pod
+
+#3 Describes K8s the object; "name" and "labels" are a few of many valid keys.
+metadata:
+   name: myapp-pod
+   labels:
+      app: myapp
+      type: front-end
+      nonsensical-bologna: boop 
+      # You can put any key/value pairs you want in labels.
+      # While "app" and "type" seem like they may be important labels, they are
+      # something that we will use to organize our objects. 
+      
+#4 The desired state of the object which K8s will work to maintain.
+spec:
+   containers:
+      - name: nginx-container
+        image: nginx

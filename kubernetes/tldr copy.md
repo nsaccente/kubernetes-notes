@@ -26,27 +26,13 @@
 
    
 ## Introduction
-   Kubernetes (sometimes written as k8s) coordinates a highly available cluster
-   of computers to work as a single unit by automating the distribution and
-   scheduling of application containers. To accomplish this, Kubernetes uses two
-   _"resources"_:
+   Welcome to a **No Nonsense** guide to Kubernetes. I promise to do my best to
+   introduce material in a logical manner, provide production-centric examples,
+   pepper in memes and gifs to keep things feeling fresh, and explain 
+   complicated material as simply as possible. If there's one thing I hate, 
+   it's fluff.
 
-   * __Master__: Resposible for managing the cluster; i.e. scheduling, scaling
-      applications, rolling out updates, and maintaining applications' desired
-      state.
-   *  __Worker Node__: A VM or a physical computer that serves as a worker
-      machine in a Kubernetes cluster. 
-
-      Each worker node has a __Kubelet__, which is an agent
-      for managing the node and communicating with the Kubernetes master. 
-
-   When you deploy applications on Kubernetes, you tell the master to start the
-   application containers. The master schedules the containers to run on the
-   cluster's nodes. The nodes communicate with the master using the Kubernetes API,
-   which the master exposes. End users can also use the Kubernetes API directly to
-   interact with the cluster.
-
->> **For production**: A Kubernetes cluster should have at least 3 workers. 
+   ![KubernetesComic](https://pbs.twimg.com/media/EDrZEKCWwAAG_Ty.jpg)
 
    [Back to top](#quick-links)
 
@@ -118,7 +104,8 @@
    1. Install either [KVM](https://www.linux-kvm.org/page/Main_Page) (which also
       uses QEMU) or [Virtualbox](https://www.virtualbox.org/wiki/Downloads).
 
-      1. If you are a **RHEL/CentOS/Fedora user installing VirtualBox**, you might encounter:
+      1. If you are a **RHEL/CentOS/Fedora user installing VirtualBox**, you might
+         encounter:
          ```
          This system is currently not set up to build kernel modules.
          Please install the gcc make perl packages from your distribution.
@@ -177,7 +164,8 @@
          #> kubeconfig: Configured
          ```
          
-      1.  If something doesn't seem right, use the following to increase your logging level:
+      1. If something doesn't seem right, use the following to increase your 
+         logging level:
          ```bash
          minikube -v=9 start
          ```
@@ -193,263 +181,501 @@
          ```
    </details>
 
-
    [Back to top](#quick-links)
 
 
 ---
 
-## Concepts 
-   In Kubernetes (sometimes shortened to K8s), there are 
-   two types of objects:
 
-   * **pods** - the most fundamental unit that represents
-     containers running on a cluster, and;
-   * **controllers** - serves as an abstraction for the
-     management of pods.
+# Now that Your Work Environment is set up, Let's Get Started!
 
-   While there are ways to create pods and controllers
-   directly from the command line, we will be building
-   yaml files and applying them to our Kubernetes cluster.
-   This is the production-established method.
+![Alt Text](https://media1.giphy.com/media/gHtvqib1yFvNbsjwCs/giphy.gif)
 
-   ### Pods
 
-   1. A **pod** is a collection of container(s) that share 
-     resources, have a single IP, and can share volumes. 
-     **Pods run on workernodes.**  Pods can have one, or 
-     many containers running within them.
+---
 
-   1. Kubernetes will work to make sure that your application's current state is the same as 
-      it's desired state using the following:
-      * Every object has a `status` attribute, which describes the _current state_ of the object.
-      * You can declare the `spec` attribute of the object when creating a Kubernetes object, 
-      which describes the _desired state_ of the resource. 
-   
-   1. **Init Containers** are containers that must run to completion, one at a time, before
-      anything else is ran. Init Containers can be used for installing build-tools, compiling
-      code from source, forcing the pod to wait before starting, cloning a Git repository into
-      a volume, etc. Below is an example of InitContainers in a Pod Recipe.
-      ```yaml
-      apiVersion: v1
-      kind: Pod
-      metadata:
+
+# The Basics
+
+## Pods
+
+There are **four** top level properties to a Kubernetes config yaml:
+1. **apiVersion**: Each apiVersion supports different Kubernetes objects. For
+   an exhaustive list, see Kubernetes'
+   [docs](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/),
+   but don't let it bog you down. See our `/cheatsheets/` file.
+1. **kind**: The type of Kubernetes object.
+1. **metadata**: Data that describes the K8s objects. 
+1. **spec**: The _desired state_ of the K8s object. Kubernetes will work to make
+  sure that the current state of the objects matches the desired state; in other
+  words, that the **spec** matches the **status** of the object.
+
+```yaml
+#1 Version of K8s API to use.
+apiVersion: v1
+
+#2 Kind of object being created.
+kind: Pod
+
+#3 Describes K8s the object; "name" and "labels" are a few of many valid keys.
+metadata:
+   name: myapp-pod
+   labels:
+      app: myapp
+      type: front-end
+      nonsensical-bologna: boop 
+      # You can put any key/value pairs you want in labels.
+      # While "app" and "type" seem like they may be important labels, they are
+      # something that we will use to organize our objects. 
+      
+#4 The desired state of the object which K8s will work to maintain.
+spec:
+   containers:
+      - name: nginx-container
+        image: nginx
+```
+
+The `kind: Pod` specifies that we are creating a **Pod**, which is a collection
+of container(s) that share resources, have a single IP, and can share volumes.
+Pods run on worker nodes, and are the smallest unit that Kubernetes can
+understand. You will rarely manage pods yourself, and instead, will rely on one
+of Kubernetes' control structures to manage them. **Pods run on worker nodes.**
+
+[Back to top](#quick-links)
+
+
+---
+
+
+## Replica Sets
+
+A **Replica Set** will make sure that a certain number of objects exist which
+match a particular query. A ReplicaSet has 3 very important fields used to
+define it's functionality. 
+1. **template**: the Pod to be created. Does the data in `template` look 
+   familiar? It should! It is copied directly from the above pod definition.
+   **NOTE**: We don't specify an `apiVersion` or `kind` in template. This is
+   because we always assume we are using `apiVersion: v1`, and `kind: Pod`.
+1. **selector**: provides us with a tool to query for pods that we care about.
+1. **replicas**: specifies the number of pods we want to exist at a given time.
+
+```yaml
+# Remember, every K8s object has apiVersion, kind, metadata, and a spec.
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myapp-repplicaset
+  labels:
+    app: myapp
+    type: front-end
+    guess_what: chicken_butt
+spec:
+
+  #1 Provides a template of a pod we wish to create when needed.
+  template:
+    metadata:
       name: myapp-pod
       labels:
-         app: myapp
-      spec:
+        app: myapp
+        type: front-end
+        boop: blarp
+    spec:
       containers:
-      - name: myapp-container
-         image: busybox:1.28
-         command: ['sh', '-c', 'echo The app is running! && sleep 3600']
-      initContainers:
-      - name: init-myservice
-         image: busybox:1.28
-         command: ['sh', '-c', "until nslookup myservice.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for myservice; sleep 2; done"]
-      - name: init-mydb
-         image: busybox:1.28
-         command: ['sh', '-c', "until nslookup mydb.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for mydb; sleep 2; done"]
-      ```
-      If either `init-myservice` or `init-mydb` fail for any reason, Kubernetes will restart 
-      the Pod. These two InitContainers must run to completion before `myapp-container` will
-      start.
+        - name: nginx-container
+          image: nginx
 
-   1. Any container in a Pod can enable `privileged` mode, which is useful for containers
-      attempting to manipulate the network stack, accessing devices, etc... It should be
-      noted that whichever container runtime you use, whether it be Docker or a VM, must
-      support the concept of a privileged container for this to work.
+  #2 This ReplicaSet will watch for all pods that have metadata.type: front-end
+  selector: 
+    matchLabels:
+      type: front-end
 
-      >> **VULNERABILITY**: Privileged containers can be used for evil; see
-      [Runtimes And the Curse of the Privileged Container](https://brauner.github.io/2019/02/12/privileged-containers.html).
+  #3 Watch for 3 objects matching the above selector. 
+  replicas: 3
+```
 
-<!-- 
-   **Advanced Topics:** 
-   * [Pod Readiness Gates](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-readiness-gate)
-   * [Pod Presets](https://kubernetes.io/docs/concepts/workloads/pods/podpreset/)
-   * [Pod Topology Spread Constraits](https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/)
-   * [Disruptions](https://kubernetes.io/docs/concepts/workloads/pods/disruptions/)
+We can control ReplicaSets from the command line using the following commands.
+1. We can create a ReplicaSet using our config with:
+   ```bash
+   kubectl create -f replicaset-def.yaml
+   ```
 
-   [Back to top](#quick-links)
+1. We can list existing ReplicaSets using:
+   ```bash
+   kubectl get replicaset
+   ```
 
+1. We can describe a ReplicaSet using:
+   ```bash
+   kubectl describe replicaset myapp-replicaset
+   ```
 
---- 
+1. We can update a ReplicaSet using:
+   ```bash
+   kubectl replace -f replicaset-def.yaml
+   ```
 
+1. We can delete a ReplicaSet using:
+   ```bash
+   kubectl delete replicaset myapp-replicaset
+   ```
+   **BEWARE!** Deleting a ReplicaSet also deletes all underlying pods.
 
-   ### Namespaces 
+Let's say we end up needing more replicas than we currently have. We can scale
+our ReplicaSet in one of 3 ways.
 
-   
+1. This is the preferred way if you want to update the yaml file. Simple change
+   the number of replicas in the config from 3 to 6... or however many you want.
+   ```bash
+   kubectl replace -f replicaset-def.yaml
+   ```
 
+1. This is the preferred way if you don't want to change the yaml file, but
+   want to make changes to the deployed object.
+   ```bash
+   kubectl scale --replicas=6 -f replicaset-def.yaml
+   ```
 
+1. This is the preferred way if you don't want to specify the file. Note that
+   this requires the object type, followed by the object name.
+   ```bash
+   kubectl scale --replicas=6 replicaset myapp-replicaset
+   ```
 
+> **Pro Tip**: You can use `replicaset`, `rs`, and `replicasets` 
+  interchangeably in the command line.
 
+> **NOTE**: You may see **ReplicationController** being used, which is a K8s object that is
+currently being phased out. The only difference is, a ReplicaSet has a selector
+which gives the ability to manage pods that have been created before the
+ReplicaSet was.
 
-
-   1. A **namespace** is a virtual cluster backed by a physical cluster. Think of it as 
-      a way for two teams in the same organization to build separate applications on the
-      same hardware without the need to worry about interfering with the other team's
-      applications accidently.
-   
-   1. There are a few things to keep in mind about namespaces:
-      * Namespaces provide a scope for names.
-      * Resource names must be unique within the namespace; 
-         but can be repeated across namespaces.
-      * You cannot nest namespaces.
-      * A Kubernetes resource can only exist in one namespace.
-
-
-   1. View existing namespaces with the following command:
-      ```bash
-      kubectl get namespaces
-      #> NAME              STATUS   AGE
-      #> default           Active   154m
-      #> kube-node-lease   Active   154m
-      #> kube-public       Active   154m
-      #> kube-system       Active   154m
-      ```
-      * **default** - The default namespace for objects with no other namespace.
-      * **kube-system** - The namespace for objects created by the Kubernetes System.
-      * **kube-public** - This namespace is created automatically and is readable by all users
-            (including those not authenticated). This namespace is mostly reserved for 
-            cluster usage, in case that some resources should be visible and readable 
-            publicly throughout the whole cluster. This public aspect is purely 
-            convention and is not mandatory.
-
-   1. You can create a namespace with the following:
-      ```bash
-      kubectl create namespace <your-new-namespace>
-      ```
-      Your namespace name must:
-         * contain at most 63 characters
-         * contain only lowercase alphanumeric characters or ‘-’
-         * start with an alphanumeric character
-         * end with an alphanumeric character
-
-      When you create a service, Kubernetes creates a corresponding DNS entry of the form
-      `<service-name>.<namespace-name>.svc.cluster.local`, which means that if a container just uses
-         `<service-name>`, it will resolve to the service which is local to a namespace. This is useful
-      for using the same configuration across multiple namespaces such as Development, Stagin, and
-      Production. If you want to reach across namespaces, you need to use the fully qualified domain
-      name (FQDN).
-
-   1. You can delete a namespace using the following, but be careful! This deletes everything in
-      the namespace!
-      ```bash
-      kubectl delete namespace <your-old-namespace>
-      ```
-      * > **NOTE**: This delete is asynchronous, so you may see the namespace for a little while. 
-                     Give it a second!
-
-   1. It is not necessary to use multiple namespaces just to separate slightly different resources,
-      such as different versions of the same software: use version labels to distinguish resources 
-      within the same namespace. More on that later...
-
-   1. Finally, you can specify the namespace to run a resource in with the `--namespace=<your_namespace>` flag.
-
-
-   1. As if this isn't confusing enough already, not all objects exist within a namespace. Use the
-      following command:
-      ```bash
-      # In a namespace
-      kubectl api-resources --namespaced=true 
-
-      # Not in a namespace
-      kubectl api-resources --namespaced=false
-      ```
-
-   [Back to top](#quick-links)
-
-
---- 
-      
-
-   ### Labels and Selectors
-
-   1. **Labels** are key-value pairs that are attached to objects, and are
-      intended to be used to specify identifying attributes of objects that are meaningful and
-      relevant to users. Use labels to organize, select, or filter
-      subsets of objects. Labels can be attached upon the time of creation, and
-      subsequently added and modified at any time.
-
-      ```yaml
-      "metadata": 
-         "labels": 
-            "key1" : "value1",
-            "key2" : "value2"
-      ```
-
-   1. We can query objects using **label selectors**, in one of two ways with the `-l` flag:
-      1. _Equality based_ selection uses `==` (which can be shortened to just `=`),
-         and `!=` operators just as you might assume. Here's an example query:
-         ```bash
-         kubectl get pods -l environment=production,tier=!frontend
-         ```
-         Here, we are querying for all pods with an 'environment' key equal to
-         'production', and a 'tier' key not equal to 'frontend' (this includes pods
-         where the value of 'tier' is empty). 
-      
-      1. _Set based_ selection uses `in`, `notin`, and `exists`. Here's an exmple
-         query:
-         ```bash
-         kubectl get pods -l 'environment in (production, qa)'
-         ```
-         Here, we are querying for all pods whose 'environment' is equal to either
-         'production' or 'qa'. Set based expressions are generally more expressive
-         than equality based, but take some more getting used to.
-
-
-   1. Non-identifying information can be added to the metadata values as an
-      **annotation**:
-      ```yaml
-      "metadata": 
-         "annotations": 
-            "key1": "value1",
-            "key2": "value2"
-      ```
-      How you choose to annotations is purely a matter of taste, but here are some
-      examples of what you could use them for:
-         * Pointers to logging, monitoring, analytics, or audit repositories.
-         * Phone or pager numbers of persons responsible.
-         * A link to documentation for the running application.
-
-   1. **Field selectors** let you select resources based on the value of one or
-      more resouce fields. Similar to label selectors, we use _equality-based_
-      operators (`=`, `==`, and `!=`), and can daisy-chain selectors
-      together with commas. However, unlike label selectors, 
-      **set-based operators will not work.**
-      ```bash
-      kubectl get pods --field-selector=status.phase!=Running,spec.restartPolicy=Always
-      ```
-      Some things to keep in mind about field selectors:
-         1. Not all Kubernetes resources have support for field selectors.
-         1. **All** resources support `metadata.name` and `metadata.namespace`.
-
-         If you try touse a field selector on a Kubernetes resource that doesn't
-         support it, Kubernetes will yell at you:
-         ```bash
-         kubectl get ingress --field-selector foo.bar=baz
-         #> Error from server (BadRequest): Unable to find "ingresses" that match label selector "", field selector "foo.bar=baz": "foo.bar" is not a known field selector: only "metadata.name", "metadata.namespace"
-         ```
-
-   1. Here's a table of example labels you might use in production:
-      | Key	                     | Description                                                               | Example          | Type   |
-      |------------------------------|---------------------------------------------------------------------------|------------------|--------|
-      |`app.kubernetes.io/name`      | name of the application                                                   | mysql            | string |
-      |`app.kubernetes.io/instance`  | a unique name identifying the instance of an application                  | wordpress-abcxzy | string | 
-      |`app.kubernetes.io/version`   | current version of the application (e.g. semantic version, revision hash) | 5.7.21           | string |
-      |`app.kubernetes.io/component` | component within the architecture                                         | database         | string |
-      |`app.kubernetes.io/part-of`   | name of a higher level application this one is part of                    | wordpress        | string |
-      |`app.kubernetes.io/managed-by`| tool being used to manage the operation of an application                 | helm             | string |
-      |`app.kubernetes.io/component` | The component within the architecture                                     | database         | string |
-      |`app.kubernetes.io/part-of`   | The name of a higher level application this one is part of                | wordpress        | string |
-      |`app.kubernetes.io/managed-by`| The tool being used to manage the operation of an application             | helm             | string |
-
-   [Back to top](#quick-links)
+[Back to top](#quick-links)
 
 
 ---
 
 
-   ### Replica Sets and Stateful Sets
+## Deployments
 
-   1. To provide high availability of 
-   https://www.youtube.com/watch?v=GieXzb91I40 -->
+ReplicaSets solve the problem of having enough Pods running to provide high
+availability of our application; but it doesn't make it particularly easy to
+upgrade over time. This is where **Deployments** come in. Deployments will
+make sure that upgrades happen gradually (also known as a rolling upgrade).
+Upgrading pods gradually help to ensure that users do not notice any downtime.
+Deployments also make it easy to rollback to a previous versions of software
+if need be. The config for a Deployment is nearly identical to a ReplicaSet's
+config, except for:
+1. We update the `kind` to `Deployment`.
+1. We update the name to reflect the fact that it's a Deployment.
+
+```yaml
+# Remember, every K8s object has apiVersion, kind, metadata, and a spec.
+apiVersion: apps/v1
+
+# 1. This config is nearly identical to ReplicaSet, except for the kind.
+kind: Deployment
+metadata:
+
+  # 2. We also named it appropriately.
+  name: myapp-deployment
+  labels:
+    app: myapp
+    type: front-end
+    super: mario
+spec:
+  template:
+    metadata:
+      name: myapp-pod
+      labels:
+        app: myapp
+        type: front-end
+        boop: blarp
+    spec:
+      containers:
+        - name: nginx-container
+          image: nginx
+  selector: 
+    matchLabels:
+      type: front-end
+  replicas: 3
+  ```
+
+1. We can create our Deployment with:
+   ```bash
+   kubectl create -f deployment-def.yaml
+   ```
+
+1. The Deployment automatically creates a ReplicaSet:
+   ```bash
+   kubectl get replicaset
+   # NAME                       DESIRED    CURRENT    READY    AGE
+   # myapp-deployment-abc123    3          3          3        2m
+   ```
+
+1. The ReplicaSet created by the Deployment will subsequently create Pods:
+   ```bash
+   kubectl get pods
+   # NAME                             READY STATUS   RESTARTS  AGE
+   # myapp-deployment-abc123-xyz001   1/1   Running  0         2m
+   # myapp-deployment-abc123-xyz002   1/1   Running  0         2m
+   # myapp-deployment-abc123-xyz003   1/1   Running  0         2m
+   ```
+
+1. Now that we seem to be working with a bunch of different K8s objects, we can
+   utilize the following to make our lives a bit easier.
+   ```bash
+   kubectl get all
+   ```
+
+1. You can format the output from `kubectl` using one of the following:
+   * `-o json`: Output a JSON formatted API object.
+   * `-o name`: Print only the resource name and nothing else.
+   * `-o wide`: Output in the plain-text format with any additional information.
+   * `-o yaml`: Output a YAML formatted API object.`
+
+> **Pro Tip**: You can use the flag `--dry-run` when executing a `kubectl`
+  command and it will inform you whether the syntax of the command and config
+  are correct, as well as if the resource is able to be created.
+
+[Back to top](#quick-links)
+
+
+---
+
+
+## Namespaces
+
+**Namespaces** are a way to organize K8s objects while enforcing policy,
+increasing security, and preventing accidental manipulation of vital objects.
+Kubernetes creates 3 namespaces when the cluster is created:
+1. **Default** - this is where all Kubernetes objects are placed by default
+1. **kube-system** - where K8s places all Pods and Services used by K8s to run,
+   such as those required by the networking solution, the DNS service, etc.
+1. **kube-public** - where K8s objects that should be available to all users
+   are placed.
+
+You can create your own Namespaces, for example, a namespace for `prod`
+and another for `dev`. This way, while working in the development
+environment, you don't accidentally interact with a K8s object that belongs
+to the production namespace.
+
+We can access K8s objects outside of the current namespace by referencing its 
+fully qualified domain name as configured by Kubernetes. For example:
+```java
+mysql.connect("db-service") // Accessing the service from within the namespace.
+mysql.connect("db-service.dev.svc.cluster.local") // Accessing a service outside of namespace.
+//             db-service                          Get me a K8s object called _,
+//                        dev                      from the namespace _,
+//                            svc                  of type _,
+//                                cluster.local    and with the domain name.
+```
+
+You can run any `kubectl` command against a namespace of your chosing by
+specifying the namespace:
+```bash
+kubectl create -f pod-def.yaml --namespace=dev
+```
+
+We can also declare the namespace that a Kubernetes object should be placed in
+via a metadata tag:
+```yaml
+apiVersion: v1
+kind: Pod
+
+metadata:
+   name: myapp-pod
+   namespace: dev
+   labels:
+      app: myapp
+      type: front-end
+      asdf: abc123
+spec:
+   containers:
+      -name: nginx-container
+       image: nginx
+```
+
+We can define a custom Namespace in one of two ways:
+
+1. Via yaml 
+   ```yaml
+   apiVersion: v1
+   kind: Namespace
+   metadata:
+      name: dev
+   ```
+   followed by the command to `kubectl`:
+   ```
+   kubectl create -f namespace-dev.yaml
+   ```
+
+2. ```
+   kubectl create namespace dev
+   ```
+
+> **Pro Tip**: You can permanently change your default namespace with the following
+ `kubectl config set-context $kubectl config current-context) --namespace=dev`
+
+> **Pro Tip**: We can list all Pods, Deployments, ReplicaSets, etc, across all
+  Namespaces via `kubectl get pods --all-namespaces`
+
+[Back to top](#quick-links)
+
+
+---
+
+
+![configfu](https://media.giphy.com/media/3ov9k6pbxOR7X144h2/giphy.gif)
+
+# Mastering Config-Fu
+
+## Commands and Arguents
+Let's say we have a Dockerfile that looks like this:
+```Dockerfile
+FROM Ubuntu
+# the command that is run at startup. 
+ENTRYPOINT ["sleep"]
+
+# the arguments passed to the command. 
+CMD ["5"]
+```
+
+What if we wanted to change this behavior when we spin up the container in a
+Pod? This is where the following come in:
+
+1. **command**: overrides the ENTRYPOINT of the Dockerfile we are creating in a
+   Pod.
+
+1. **args**: overrides the CMD of the Dockerfile we are creating in a Pod.
+```yaml
+apiVersion: v1
+kind: Pod
+metadata: 
+   name: my-ubuntu-pod
+spec:
+   containers:
+      - name: my-ubuntu-container
+        image: my-ubuntu-container
+        command: ["sleep"]
+        args: ["10"]
+```
+
+[Back to top](#quick-links)
+
+
+---
+
+
+## Environment Variables, ConfigMaps, and Secrets
+
+We can pass **environment variables** into our container as key-value pairs
+like so:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+   name: simple-webapp-color
+spec:
+   containers:
+      - name: simple-webapp-color
+        image: simple-webapp-color
+
+        # We pass environment values 
+        env:
+           - name: APP_COLOR
+             value: pink
+           - name: DO_NOT_DELETE
+             value: /usr/bin
+```
+
+A **ConfigMap** is an abstraction that makes it easy to manage a lot of
+environment variables at once. When we create a ConfigMap below, take note of
+the fact that there is no `spec` key, but instead, a `data` key.
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata: 
+  name: app-config 
+data: 
+  APP_COLOR: blue
+  APP_MODE: prod
+  MY_NUMBER: 3.14
+  FAV_PATH: "/usr/local/bin"
+```
+
+You can use the following with the `kubectl` tool:
+```yaml
+kubectl create -f configmap-def.yaml
+kubectl get configmaps 
+```
+
+We can import the `data` from our ConfigMap like so:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+   name: simple-webapp-color
+   labels:
+      name: simple-webapp-color
+spec:
+   containers:
+      - name: simple-webapp-color
+        image: simple-webapp-color
+        
+        # Use the ConfigMap named app-config
+        envFrom:
+           - configMapRef:
+                name: app-config 
+```
+
+**Secrets** is very similar to a ConfigMap, except they are stored in an
+encoded format.
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+   name: app-secret
+data:
+   DB_Host: bXlzcWw=         # echo -n 'mysql' | base64
+   DB_User: cm9vdA==         # echo -n 'root' | base64
+   DB_Pass: cGFzc3dvcmQxMjM= # echo -n 'password123' | base64
+```
+
+You can decode a base64 string like so:
+```bash
+echo -n 'bXlzcWw=' | base64 --decode
+```
+
+We can view secrets in our cluster using:
+```
+kubectl get secrets
+```
+
+Now, let's give a container access to our Secret.
+```yaml
+apiVersion v1:
+kind: Pod
+metadata:
+   name: simple-webapp-color
+   labels:
+      name:simple-webapp-color
+spec:
+   containers:
+      -  name: simple-webapp-color
+         image: simple-webapp-color
+
+   # Name of the K8s object goes here.
+   envFrom:
+      - secretRef:
+           name: app-secret
+```
+
+> **For production**: You may have noticed that base64 isn't actually doing
+anything to keep our information safe, since it can be very easily decoded. 
+Have a look at 
+[this article](https://blog.aquasec.com/managing-kubernetes-secrets) 
+to learn more about the shortcomings of Secrets, as well as how to use secrets
+in a production environment. (tl;dr use
+[AWS Secrets Manager](https://aws.amazon.com/secrets-manager/),
+[Google Cloud Key Management Service](https://cloud.google.com/kms/), or
+[Azure Key Vault](https://azure.microsoft.com/en-in/services/key-vault/)).

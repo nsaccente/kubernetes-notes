@@ -1,0 +1,31 @@
+# Remember, every K8s object has apiVersion, kind, metadata, and a spec.
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: myapp-replicaset
+  labels:
+    app: myapp
+    type: front-end
+    guess_what: chicken_butt
+spec:
+
+  #1 Provides a template of a pod we wish to create when needed.
+  template:
+    metadata:
+      name: myapp-pod
+      labels:
+        app: myapp
+        type: front-end
+        boop: blarp
+    spec:
+      containers:
+        - name: nginx-container
+          image: nginx
+
+  #2 This ReplicaSet will watch for all pods that have metadata.type: front-end
+  selector: 
+    matchLabels:
+      type: front-end
+
+  #3 Watch for 3 objects matching the above selector. 
+  replicas: 3

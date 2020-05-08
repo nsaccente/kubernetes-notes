@@ -1,0 +1,29 @@
+# Remember, every K8s object has apiVersion, kind, metadata, and a spec.
+apiVersion: apps/v1
+
+# 1. This config is nearly identical to ReplicaSet, except for the kind.
+kind: Deployment
+metadata:
+
+  # 2. We also named it appropriately.
+  name: myapp-deployment
+  labels:
+    app: myapp
+    type: front-end
+    super: mario
+spec:
+  template:
+    metadata:
+      name: myapp-pod
+      labels:
+        app: myapp
+        type: front-end
+        boop: blarp
+    spec:
+      containers:
+        - name: nginx-container
+          image: nginx
+  selector: 
+    matchLabels:
+      type: front-end
+  replicas: 3
