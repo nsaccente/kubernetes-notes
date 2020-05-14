@@ -870,3 +870,108 @@ spec:
 **NOTE**: You cannot change the ServiceAccount being used by an existing Pod,
 however, you can update the ServiceAccount used by `containers` of Deployment
 objects, thanks to rolling upgrade of the Pods associated with the Deployment.
+
+
+[Back to top](#quick-links)
+
+
+--- 
+
+
+### Resource Requests & Limits 
+
+Worker nodes have a limited pool of resources (CPU, memory and disk), so the
+K8s scheduler schedules Pods in such a way to avoid starvation. We can include
+a **resource request** in a container spec, so that when the scheduler tries to 
+place a Pod on a node, it can determine what nodes can support the Pod. If none
+of the nodes have enough resources to run the Pod, the Pod will maintain a
+status of `Pending`.
+
+If you know that your Pod will need more than the defaults, you can modify
+these values. Since Docker containers have no limit to the amount of 
+resources they consume on a node, we can impose **limits** on the container.
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+   name: myapp
+   labels:
+      name: myapp
+spec:
+   containers:
+     - name: myapp
+       image: myapp
+
+       resources:
+          # 1
+          requests:
+             memory: "1Gi"
+             cpu: 1
+            
+          # 2
+          limits:
+             memory: "2Gi"
+             cpu: 2
+```
+1. We request 1 Gibibyte (1024 bytes, as opposed to a Gigabyte, which is 1000
+   bytes) and 1 vCPU cores (equivalent to 1 AWS vCPU, 1 GCP Core, 1 Azure Core,
+   or 1 Hyperthread).
+
+2. We restrict the container to 2 Gibibytes of memory and 2 vCPU cores. 
+   * If a container attempts to consume more vCPU, Kubernetes throttles the vCPU.
+   * Containers are allowed to consume more memory than the limit, but if they
+     make a habit of overconsuming memory, the Pod will be terminated and
+     restarted.
+
+
+We can declare a **LimitRange** within a Namespace to create default
+`resources.requests` and `resources.limits` for all Pods created within that
+Namespace. For example:
+```yaml
+apiVersion: v1
+kind: LimitRange
+metadata:
+   name: mem-limit-range
+   namespace: dev
+spec:
+   limits:
+
+    # 1
+    - type: Container
+    
+    # 2
+      defaultRequest:
+         memory: 256Mi
+
+    # 3
+     default:
+         memory: 512Mi
+```
+The above yaml reads as follows:
+1. If a Container is created in the `dev` namespace without specifying its
+   own request or limits;
+1. then default memory request is created for that Container of 256 Mibibytes;
+1. and a memory limit of 512 Mibibytes.
+
+
+[Back to top](#quick-links)
+
+
+--- 
+
+
+### Taints and Tolerations
+
+**Taints** and **tolerations** provides you finer control over where the K8s
+scheduler places Pods. A taint is applied to a Node and essentially acts like
+"Pod repellent," while tolerations are applied to Pods and act like "taint
+immunity." The gif (pronounced `/ɡɪf/`) below should offer some insight.
+
+![taints_and_tolerances](https://media.giphy.com/media/S3iEPVpE7sq41pVkS0/giphy.gif)
+
+Above, you can see we have Node_1, Node_2, and Node_3. We also have 4 Pods we 
+wish to schedue across the three nodes, Pod_A, Pod_B, Pod_C, and Pod_D. We have
+applied a taint on Node_1, and a tolerance on Pod_D. Pod_A, Pod_B, and Pod_C 
+are intolerant to the taint on Node_1, so they get scheduled across Node_2 and 
+Node_3. Finally, Pod_D is tolerant to the taint on Node_1, so Pod_D gets 
+scheduled on Node_1 
