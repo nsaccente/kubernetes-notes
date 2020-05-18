@@ -974,4 +974,345 @@ wish to schedue across the three nodes, Pod_A, Pod_B, Pod_C, and Pod_D. We have
 applied a taint on Node_1, and a tolerance on Pod_D. Pod_A, Pod_B, and Pod_C 
 are intolerant to the taint on Node_1, so they get scheduled across Node_2 and 
 Node_3. Finally, Pod_D is tolerant to the taint on Node_1, so Pod_D gets 
-scheduled on Node_1 
+scheduled on Node_1.
+
+To apply a toleration to a Pod, you can add this information to a Pod config:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+   name: myapp
+spec:
+   containers:
+      - name: my-ubuntu
+        image: my-ubuntu
+   
+   tolerations:
+   - key: "app"
+     operator: "Equal"
+     value: "blue"
+     effect: "NoSchedule"
+```
+See the 
+[K8s docs](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/#concepts)
+for more yaml variants.
+
+We can apply a taint to a node through the command line like so:
+```bash
+kubectl taint nodes <node-name> <key>=<value>:<taint-effect>
+```
+* `node-name` should be replaced with the name of the node you want to apply
+  taint to.
+* `key`, `value` should be replaced with tolerations that ignore the taint. For
+  example, if we only wanted to apply Pods like above to be scheduled on the
+  node, we would specify `app=blue`. 
+* `taint-effect` defines what would happen to the Pod if they do not tolerate
+  the taint. Replace with one of the following to apply an effect:
+  1. `NoSchedule`: the Pods will not be scheduled on the Node
+  1. `PreferNoSchedule`: K8s will try to avoid placing a Pod on the Node, but 
+     this is not guaranteed.
+  1. `NoExecute`: new Pods will not be scheduled on the Node, and existing Pods
+     on the node, if any, will be evicted if they do not tolerate the taint 
+     (these Pods may have been scheduled on the Node before the taint was 
+     applied).
+
+> **Fun Fact**: A Kubernetes cluster is composed of a single Master Node, and 
+  _n_-many Worker Nodes. By default, no Pods can be scheduled on the Master
+  Node, which is accomplished via a Taint. You can modify this behavior if you
+  need (which I don't recommend), but you can view this taint via
+  `kubectl describe node kubemaster | grep Taint`.
+
+[Back to top](#quick-links)
+
+
+---
+
+
+### Node Selectors and Affinity
+
+We can assign a label to a Node from the command line like so:
+
+```bash
+kubectl label nodes <node-name> <label-key>=<label-value>
+```
+
+* `node-name` should be replaced with the name of the node you want to attach
+  the label to.
+* `label-key` is the key you want to assign to the node.
+* `label-value` is a value you want to assign to the node.
+
+Let's say we have a single Node in our cluster that is a lot beefier than the
+rest, and we want to prefer that a particular Pod runs on it to avoid sucking
+up too many resources of the weaker nodes. We can apply a label on it like so:
+```bash
+kubectl label nodes my-big-node size=Large
+```
+
+Now, we can control where Pods are scheduled in another way, through the use of
+a **nodeSelector**. 
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+   name: myapp-pod
+spec:
+   containers:
+      - name: data-processor
+        image: data-processor
+   
+   # 1
+   nodeSelector:
+      size: Large
+```
+1. The `nodeSelector` is scheduling this Pod on Nodes with the label 
+   `size=Large`. This pod will get scheduled on `my-big-node` due to the
+   kubectl command we ran above.
+
+
+There are limitations to nodeSelectors. For example, we can't specify a Pod to
+run on either a Large **OR** Medium Node. Likewise, we can't specify a Pod to 
+run on any Node that **IS NOT** Small. This is where **nodeAffinity** comes 
+into play.
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+   name: myapp-pod
+spec:
+   containers:
+      - name: data-processor
+        image: data-processor
+   
+   # 1 
+   affinity:
+      # 2 
+      nodeAffinity:
+         # 3
+         requiredDuringSchedulingIgnoredDuringExecution:
+            # 4
+            nodeSelectorTerms:
+               # 5 
+               - matchExpressions:
+                  - key: size
+                    operator: In
+                    values:
+                       - Large 
+``` 
+This yaml file looks super complicated, but it provides the same functionality
+as the yaml in the nodeSelector example above. Let's break this down:
+
+1. Define an `affinity` section at the same level as `containers`.
+
+1. Declare that we are going to be applying a `nodeAffinity`.
+
+1. What if there are no Nodes that this could be scheduled to? What if someone
+   changes the labels on the Node later on? This is handled via the type of
+   nodeAffinity. There are a few types of nodeAffinity that can be used:
+
+   * `requiredDuringSchedulingIgnoredDuringExecution`: the scheduler can only
+     place the Pod on matching Nodes, and if no matching Nodes exist, the Pod
+     will not be scheduled (thus, **required during scheduling**). If the label
+     associated with the Node changes such that the nodeAffinity is no longer
+     satisfied, the Pods will continue to run normally (thus 
+     **ignored during execusion**).
+
+   * `preferredDuringSchedulingIgnoredDuringExecution`: the scheduler will try
+     to place the Pod on matching Nodes, and if no matching Nodes exists, the
+     Pod will be scheduled on whatever Node can support it (thus 
+     **preferred during scheduling**). If the label associated with the Node
+     changes such that the nodeAffinity is no longer satisfied, the Pods will 
+     continue to run normally (thus **ignored during execusion**).
+
+   * `requiredDuringSchedulingRequiredDuringExecution`: the scheduler can only
+     place the Pod on matching Nodes, and if no matching Nodes exist, the Pod
+     will not be scheduled (thus, **required during scheduling**). If the label
+     associated with the Node changes such that the nodeAffinity is no longer 
+     satisfied, t      _blue-pod.yaml_
+      ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+         name: green-pod
+      spec:
+         containers:
+            - name: my-blue-app
+            image: my-blue-app
+         
+         tolerations:
+         - key: "app"
+         operator: "Equal"
+         value: "blue"
+         effect: "NoSchedule"
+      ```he Pod will be evicted and attempted to be rescheduled.
+
+1. `matchExpressions` are the labels we want to match on. Because we can match
+    against multiple values, `values` is a list.
+
+We can accomplish scheduling on a Large **OR** Medium Node by replacing section
+5 with:
+```yaml
+- matchExpressions:
+   key: size
+   operator: In
+   values:
+      - Large
+      - Medium
+```
+
+We can accomplish scheduling on any Node that is **NOT** Small by replacing
+section 5 with:
+```yaml
+- matchExpressions:
+   key: size
+   operator: NotIn
+   values:
+      - Small
+```
+
+We can choose to only schedule Pods on Nodes which have a particular key by
+replacing section 5 with:
+```yaml
+- matchExpressions:
+   key: size
+   operator: In
+```
+
+[Back to top](#quick-links)
+
+
+---
+
+
+### Node Affinity + Taints & Tolerations = An OCD Daydream
+
+Using Node Affinity, Taints, and Tolerations, we have finer control over where
+Pods get scheduled. Refer to the gif below:
+
+![nodeAffinityVsTaintsAndTolerations](https://media.giphy.com/media/eKmngsQDV42AiAeEWs/giphy.gif)
+
+There's a lot going on here, so let's break it down:
+* We have 5 Pods we want to schedule across 5 Nodes. 
+* Three of the Pods and Nodes have metadata assigned to them which associates a color to them.
+* We don't care where the uncolored Pods get scheduled.
+* We don't care what gets schedule on the uncolored Nodes.
+* **We want to make sure that exactly one Pod gets scheduled per Node.**
+* Now let's take some action to schedule things nicely:
+   1. We apply taints to the colored Nodes which looks something like this:
+      ```bash
+      kubectl taint nodes Blue-Node color=blue:NoSchedule
+      kubectl taint nodes Red-Node color=red:NoSchedule
+      kubectl taint nodes Green-Node color=green:NoSchedule
+      ```
+   1. Next, we apply tolerations to the colored Pods, which looks like:
+
+      _green-pod.yaml_
+      ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+         name: green-pod
+      spec:
+         containers:
+            - name: my-green-app
+            image: my-green-app
+         
+         tolerations:
+         - key: "color"
+         operator: "Equal"
+         value: "green"
+         effect: "NoSchedule"
+      ```
+
+      _blue-pod.yaml_
+      ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+         name: green-pod
+      spec:
+         containers:
+            - name: my-blue-app
+            image: my-blue-app
+         
+         tolerations:
+         - key: "color"
+         operator: "Equal"
+         value: "blue"
+         effect: "NoSchedule"
+      ```
+
+      _red-pod.yaml_
+      ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+         name: green-pod
+      spec:
+         containers:
+            - name: my-red-app
+            image: my-red-app
+         
+         tolerations:
+         - key: "color"
+         operator: "Equal"
+         value: "red"
+         effect: "NoSchedule"
+      ```
+
+   1. Then, we attach labels to the colored Nodes for use with NodeAffinity:
+      ```bash
+      kubectl label nodes Blue-Node node-color=blue
+      kubectl label nodes Red-Node node-color=red
+      kubectl label nodes Green-Node node-color=green
+      ```
+   1. Finally, we add Node Affinities to the spec of the colored Pods like so:
+      
+      _green-pod.yaml_
+      ```yaml
+      ...
+         affinity:
+            nodeAffinity:
+               requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                     - matchExpressions:
+                        - key: color 
+                          operator: In
+                          values:
+                             - green
+      ```
+
+      _blue-pod.yaml_
+      ```yaml
+      ...
+         affinity:
+            nodeAffinity:
+               requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                     - matchExpressions:
+                        - key: color 
+                          operator: In
+                          values:
+                             - blue
+      ```
+
+      _red-pod.yaml_
+      ```yaml
+      ...
+         affinity:
+            nodeAffinity:
+               requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                     - matchExpressions:
+                        - key: color 
+                          operator: In
+                          values:
+                             - red
+      ```
+
+   1. What results is a way to guarantee:
+      * the green Pod is scheduled on the green Node.
+      * the blue Pod is scheduled on the blue Node.
+      * the red Pod is scheduled on the red Node.
+      * the two uncolored Pods are not scheduled on any of the colored Nodes,
+        but instead, are scheduled arbitrarily across the "Other" Nodes.
+
