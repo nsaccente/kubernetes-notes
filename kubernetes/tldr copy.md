@@ -1316,3 +1316,178 @@ There's a lot going on here, so let's break it down:
       * the two uncolored Pods are not scheduled on any of the colored Nodes,
         but instead, are scheduled arbitrarily across the "Other" Nodes.
 
+[Back to top](#quick-links)
+
+
+---
+
+
+## Multi-Container Pods
+![Multi_ContainerPods](https://media.giphy.com/media/K4x1ZL36xWCf6/giphy.gif)
+
+### Multi-Container Pod Design Patterns
+So far, we have been working with a singleton Pods which encapsulate a single
+container. Now, we will be working with Multi-Container Pods, which is
+something you are more likely to encounter in the wild.
+
+There are three common Multi-Container Pod patterns we will be discussing:
+
+1. **The Sidecar Pattern**: deploying a container alongside the application
+   to handle some minor task. For example, we may deploy a log-agent alongside
+   a web server to collect logs and forward them to a central log server.
+![sidecar_pattern.png](./.assets/sidecar_pattern.png)
+
+   What if we have a central logging server, and a bunch of different
+   applications logging to a central logging server using different logging
+   formats? This is where the next pattern comes in...
+
+
+1. **The Adapter Pattern**: deploy an additional container to allow services
+   to cooperate that otherwise wouldn't be able to. This allows you to simply
+   deploy a different sidecar container to _adapt_ to new situations as they 
+   arise (e.g. change of backend). 
+
+   For example, you may have three applications with logging agents that
+   generate logs in completely different formats. An adapter container is
+   deployed alongside those logging-agents to normalize the log data before
+   sending it off to the central logging server.
+
+   ![adapter_pattern.png](./.assets/adapter_pattern.png)
+
+1. **The Ambassador Pattern**: an "ambassador container" is deployed, which
+   essentially acts like a proxy that allows other containers to connect
+   to a port on localhost while the ambassador container proxies the connection
+   to the appropriate server. For example, say you have different logging 
+   servers for development, testing, and production deployments. Using an
+   ambassador, we can send all of our logging data to a given port over
+   localhost, which wouldn't require changing the source code of the 
+   application.
+
+   ![ambassador_pattern.png](./.assets/ambassador_pattern.png)
+  
+## Observability
+
+![halfway_there](https://media.tenor.com/images/296f6ea547c00dd8dc806cf139574eb5/tenor.gif)
+
+### Readiness and Liveness Probes
+
+Every Pod has a **status**, which describes the state of the Pod. Pods enter
+the following states in this exact order:
+   1. `Pending`: When a Pod is first created, it is in a Pending state. This is
+      when the scheduler tries to find a Node to place the Pod. If the scheduler
+      can't find a Node to place the Pod on, it will be stuck in a Pending state.
+      To figure out why the Pod is stuck in Pending, run 
+      `kubectl describe pod <name-of-your-pod>`
+
+   1. `ContainerCreating`: Once the Pod is scheduled, it enters the 
+      ContainerCreating state, where the necessary images are pulled
+      and containers are started.
+
+   1. `Running`: Once all of the containers in a Pod are running, the Pod enters
+      the Running state, which it continues to be until the program completes
+      successfully, or is terminated.
+
+**Conditions** compliment Pod status. They are an array of true or false values
+that tell us about the state of a Pod. You can view the conditions of a Pod by
+running `kubectl describe pod`. The (truncated) output will look something like
+this:
+```bash
+Name:          nginx-abc123-asdf
+Namespace:     default
+Node:          kubenode2/192.168.1.103
+Start Time:    Mon, 18 May, 2020 19:20:39 - 0400
+Labels:        app=prod
+               color=blue
+
+...
+
+Conditions:
+   Type:         Status
+   Initialized:  True
+   Ready:        True
+   PodScheduled: True
+```
+
+
+
+If we were to run `kubectl get pods`, we may get sometihng like this:
+```
+NAME                  READY      STATUS       RESTARTS   AGE
+nginx-abc123-asdf     1/1        Running      0          12m 
+```
+but when navigate to our Pod's web server, we are greeted with this in our browser:
+
+![thisSiteCantBeReached](https://encrypted-tbn1.gstatic.com/images?q=tbn%3AANd9GcRU0k3LmXSKfiYqTs14xEAHERENTP-uLQcw3d6qxdKP5PYJzfqa&usqp=CAU)
+
+Why does this happen? According to `kubectl get pods`, our Pod is ready, and
+its status is Running... What gives? Well, this is caused by erroneously
+communicating the readiness of an application. Something like Nginx may take a 
+couple of minutes to become accessible. Even though our Nginx Pod **is** 
+Running, it is **not truly ready**.
+
+To determine when a Pod is actually ready, we employ **Readiness Probes**
+inside the container. As a developer of the appliation, you know what makes the
+application _ready_. There are three types of Readiness Probes:
+
+1. **HTTP Readiness Probe**: Check if a specific path is resolvable.
+   ```yaml
+   ...
+   spec:
+      reaedinessProbe:
+         httpGet:
+            path: /api/ready
+            port: 8080
+   ```
+   This checks if localhost:8080/api/ready is resolvable.
+
+1. **TCP Test**: Check if a particular TCP socket is listening.
+   ```yaml
+   ...
+   spec: 
+      readinessProbe:
+         tcpSocket:
+            port: 3306
+   ```
+   This checks to see if localhost:3306 is listening.
+
+1. **Exec Test**: Execute a custom script within the container that exits with
+    an exit code of 0.
+   ```yaml
+   ...
+   spec:
+      readinessProbe:
+         exec:
+            command:
+            - cat
+            - /app/is_ready.txt
+   ```
+   This checks to see if /app/is_ready.txt exists.
+
+There are some additional options we can add to our Readiness Probe.
+```yaml
+...
+spec:
+   readinessProbe:
+      tcpSocket:
+         port:3306
+
+   # 1
+   initialDelaySeconds: 10
+
+   # 2
+   periodSeconds: 5
+
+   # 3
+   failureThreshold: 8
+```
+
+1. `initialDelaySeconds`: describes how long to wait before running a Readiness
+   Probe.
+
+1. `periodSeconds`: describes how long to wait between Readiness Probe attempts.
+
+1. `failureThreshold`: describes how many failed Readiness Probes to allow 
+   before terminating the Pod.
+
+Having Pods configured with Readiness Probes that reflect true readiness is
+important in developing production applications.
