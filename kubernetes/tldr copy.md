@@ -25,7 +25,7 @@
 ----
 
    
-## Introduction
+# Introduction
    Welcome to a **No Nonsense** guide to Kubernetes. I promise to do my best to
    introduce material in a logical manner, provide production-centric examples,
    pepper in memes and gifs to keep things feeling fresh, and explain 
@@ -179,15 +179,6 @@
 
 ---
 
-
-# Now that Your Work Environment is set up, Let's Get Started!
-
-![Alt Text](https://media1.giphy.com/media/gHtvqib1yFvNbsjwCs/giphy.gif)
-
-
----
-
-
 # The Basics
 
 ## Pods
@@ -233,6 +224,53 @@ of container(s) that share resources, have a single IP, and can share volumes.
 Pods run on worker nodes, and are the smallest unit that Kubernetes can
 understand. You will rarely manage pods yourself, and instead, will rely on one
 of Kubernetes' control structures to manage them. **Pods run on worker nodes.**
+
+[Back to top](#quick-links)
+
+
+---
+
+
+## Labels, Selectors and Annotations
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+   name: simple-webapp
+
+   # 1
+   labels:
+      app: App1
+      function: front-end
+
+   # 2
+   annotations:
+      buildVersion: 1.2.3
+      forAssistance:
+         call: "555-555-5555"
+         email: "jdoe@corp.com"
+         allowsTexts: True
+      ownedBy: 
+         name: "Alex Yu"
+         dept: "Psychotronics"
+spec:
+   containers:
+      - name: nginx
+        image: nginx
+```
+
+1. `labels` are used to help filter K8s objects in conjunction with a 
+   **selector**. Labels are visible to Kubernetes.
+   ```yaml
+   kubectl get pods --selector app=App1
+   # or
+   kubectl get pods --selector function=front-end
+   ```
+1. `annotations`, on the other hand, are used to communicate information with
+   other engineers. In our annotations section, we list a person to contact in
+   case an engineer needs assistance, and who owns the application. This
+   information is not visible to Kubernetes. 
 
 [Back to top](#quick-links)
 
@@ -354,12 +392,10 @@ ReplicaSets solve the problem of having enough Pods running to provide high
 availability of our application; but it doesn't make it particularly easy to
 upgrade over time. This is where **Deployments** come in. Deployments will
 make sure that upgrades happen gradually (also known as a rolling upgrade).
-Upgrading pods gradually help to ensure that users do not notice any downtime.
-Deployments also make it easy to rollback to a previous versions of software
+Upgrading Pods gradually helps to ensure that users do not notice any downtime.
+Deployments also make it easy to rollback to a previous version of software
 if need be. The config for a Deployment is nearly identical to a ReplicaSet's
-config, except for:
-1. We update the `kind` to `Deployment`.
-1. We update the name to reflect the fact that it's a Deployment.
+config, except we update the `kind` to `Deployment`.
 
 ```yaml
 # Remember, every K8s object has apiVersion, kind, metadata, and a spec.
@@ -368,8 +404,6 @@ apiVersion: apps/v1
 # 1. This config is nearly identical to ReplicaSet, except for the kind.
 kind: Deployment
 metadata:
-
-  # 2. We also named it appropriately.
   name: myapp-deployment
   labels:
     app: myapp
@@ -429,6 +463,11 @@ spec:
 > **Pro Tip**: You can use the flag `--dry-run` when executing a `kubectl`
   command and it will inform you whether the syntax of the command and config
   are correct, as well as if the resource is able to be created.
+
+
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/mNK14yXIZF4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 
 [Back to top](#quick-links)
 
@@ -689,7 +728,7 @@ in a production environment. (tl;dr use
 ---
 
 
-### Security Contexts
+## Security Contexts
 Docker implements a set of security features which limits the abilities of the 
 container's root user. This means that, by default, the root user within a 
 container has a lot of Linux capabilities disabled, such as `CHOWN`, `DAC`,
@@ -771,7 +810,7 @@ but this should do for a tl;dr article for now.
 ---
 
 
-### Service Accounts
+## Service Accounts
 Authentication, Authorization, RBAC, etc...
 There are two types of accounts in K8s. A **user account** is used by admins,
 developers and... well... users! A **ServiceAccount** is used by machine; such
@@ -878,7 +917,7 @@ objects, thanks to rolling upgrade of the Pods associated with the Deployment.
 --- 
 
 
-### Resource Requests & Limits 
+## Resource Requests & Limits 
 
 Worker nodes have a limited pool of resources (CPU, memory and disk), so the
 K8s scheduler schedules Pods in such a way to avoid starvation. We can include
@@ -960,7 +999,7 @@ The above yaml reads as follows:
 --- 
 
 
-### Taints and Tolerations
+## Taints and Tolerations
 
 **Taints** and **tolerations** provides you finer control over where the K8s
 scheduler places Pods. A taint is applied to a Node and essentially acts like
@@ -1028,7 +1067,7 @@ kubectl taint nodes <node-name> <key>=<value>:<taint-effect>
 ---
 
 
-### Node Selectors and Affinity
+## Node Selectors and Affinity
 
 We can assign a label to a Node from the command line like so:
 
@@ -1136,13 +1175,13 @@ as the yaml in the nodeSelector example above. Let's break this down:
       spec:
          containers:
             - name: my-blue-app
-            image: my-blue-app
+              image: my-blue-app
          
          tolerations:
          - key: "app"
-         operator: "Equal"
-         value: "blue"
-         effect: "NoSchedule"
+           operator: "Equal"
+           value: "blue"
+           effect: "NoSchedule"
       ```he Pod will be evicted and attempted to be rescheduled.
 
 1. `matchExpressions` are the labels we want to match on. Because we can match
@@ -1163,10 +1202,10 @@ We can accomplish scheduling on any Node that is **NOT** Small by replacing
 section 5 with:
 ```yaml
 - matchExpressions:
-   key: size
-   operator: NotIn
-   values:
-      - Small
+  key: size
+  operator: NotIn
+  values:
+     - Small
 ```
 
 We can choose to only schedule Pods on Nodes which have a particular key by
@@ -1183,7 +1222,7 @@ replacing section 5 with:
 ---
 
 
-### Node Affinity + Taints & Tolerations = An OCD Daydream
+## Node Affinity + Taints & Tolerations = An OCD Daydream
 
 Using Node Affinity, Taints, and Tolerations, we have finer control over where
 Pods get scheduled. Refer to the gif below:
@@ -1214,13 +1253,13 @@ There's a lot going on here, so let's break it down:
       spec:
          containers:
             - name: my-green-app
-            image: my-green-app
+              image: my-green-app
          
          tolerations:
          - key: "color"
-         operator: "Equal"
-         value: "green"
-         effect: "NoSchedule"
+           operator: "Equal"
+           value: "green"
+           effect: "NoSchedule"
       ```
 
       _blue-pod.yaml_
@@ -1232,13 +1271,13 @@ There's a lot going on here, so let's break it down:
       spec:
          containers:
             - name: my-blue-app
-            image: my-blue-app
+             image: my-blue-app
          
          tolerations:
          - key: "color"
-         operator: "Equal"
-         value: "blue"
-         effect: "NoSchedule"
+           operator: "Equal"
+           value: "blue"
+           effect: "NoSchedule"
       ```
 
       _red-pod.yaml_
@@ -1250,13 +1289,13 @@ There's a lot going on here, so let's break it down:
       spec:
          containers:
             - name: my-red-app
-            image: my-red-app
+              image: my-red-app
          
          tolerations:
          - key: "color"
-         operator: "Equal"
-         value: "red"
-         effect: "NoSchedule"
+           operator: "Equal"
+           value: "red"
+           effect: "NoSchedule"
       ```
 
    1. Then, we attach labels to the colored Nodes for use with NodeAffinity:
@@ -1322,10 +1361,10 @@ There's a lot going on here, so let's break it down:
 ---
 
 
-## Multi-Container Pods
+# Multi-Container Pods
 ![Multi_ContainerPods](https://media.giphy.com/media/K4x1ZL36xWCf6/giphy.gif)
 
-### Multi-Container Pod Design Patterns
+## Multi-Container Pod Design Patterns
 So far, we have been working with a singleton Pods which encapsulate a single
 container. Now, we will be working with Multi-Container Pods, which is
 something you are more likely to encounter in the wild.
@@ -1365,11 +1404,18 @@ There are three common Multi-Container Pod patterns we will be discussing:
 
    ![ambassador_pattern.png](./.assets/ambassador_pattern.png)
   
-## Observability
+
+[Back to top](#quick-links)
+
+
+---
+
+
+# Observability
 
 ![halfway_there](https://media.tenor.com/images/296f6ea547c00dd8dc806cf139574eb5/tenor.gif)
 
-### Readiness and Liveness Probes
+## Status and Conditions
 
 Every Pod has a **status**, which describes the state of the Pod. Pods enter
 the following states in this exact order:
@@ -1408,14 +1454,22 @@ Conditions:
    PodScheduled: True
 ```
 
+[Back to top](#quick-links)
 
 
-If we were to run `kubectl get pods`, we may get sometihng like this:
+---
+
+
+## Readiness Probes
+
+Here's a dangerous little scenario that can easily happen to anybody new to 
+K8s. If we were to run `kubectl get pods`, we may get something like this:
 ```
 NAME                  READY      STATUS       RESTARTS   AGE
 nginx-abc123-asdf     1/1        Running      0          12m 
 ```
-but when navigate to our Pod's web server, we are greeted with this in our browser:
+but when navigate to a web page being served by our Pod, we are greeted with 
+this in our browser:
 
 ![thisSiteCantBeReached](https://encrypted-tbn1.gstatic.com/images?q=tbn%3AANd9GcRU0k3LmXSKfiYqTs14xEAHERENTP-uLQcw3d6qxdKP5PYJzfqa&usqp=CAU)
 
@@ -1429,18 +1483,18 @@ To determine when a Pod is actually ready, we employ **Readiness Probes**
 inside the container. As a developer of the appliation, you know what makes the
 application _ready_. There are three types of Readiness Probes:
 
-1. **HTTP Readiness Probe**: Check if a specific path is resolvable.
+1. **HTTP Readiness Probe**: Checks if a specific path is resolvable.
    ```yaml
    ...
    spec:
-      reaedinessProbe:
+      readinessProbe:
          httpGet:
             path: /api/ready
             port: 8080
    ```
    This checks if localhost:8080/api/ready is resolvable.
 
-1. **TCP Test**: Check if a particular TCP socket is listening.
+1. **TCP Test**: Checks if a particular TCP socket is listening.
    ```yaml
    ...
    spec: 
@@ -1461,7 +1515,7 @@ application _ready_. There are three types of Readiness Probes:
             - cat
             - /app/is_ready.txt
    ```
-   This checks to see if /app/is_ready.txt exists.
+   This checks to see if /app/is_ready.txt exists, and if it does, cat exits with 0.
 
 There are some additional options we can add to our Readiness Probe.
 ```yaml
@@ -1487,7 +1541,125 @@ spec:
 1. `periodSeconds`: describes how long to wait between Readiness Probe attempts.
 
 1. `failureThreshold`: describes how many failed Readiness Probes to allow 
-   before terminating the Pod.
+   before terminating the Pod. By default, a Pod will be terminated after 3
+   attempts.
 
 Having Pods configured with Readiness Probes that reflect true readiness is
 important in developing production applications.
+
+[Back to top](#quick-links)
+
+
+---
+
+
+## Liveness Probes
+
+Let's say one of your interns deploys a vital web service with this line hidden
+away:
+```python
+if today.month == "March" and today.day = 15:
+   while True:
+      doNothing()
+```
+This happens to be your intern's birthday, and they've decided that every year 
+on their birthday, this container is going to seize up. Technically, the
+application is still running, so there is no reason for Kubernetes to think
+that there is anything wrong with the application. In fact, Kubernetes thinks
+the application is alive and well!
+
+This may not be a real world example, but applications can lock up due to
+unforeseen edge cases and nasty bugs that made it past code review. This is
+where **Liveness Probes** become useful. They are pretty similar to Readiness
+probes --- both in yaml syntax, and function --- except they run throughout a
+Pod's life to ensure the Pod is still... well... alive!
+
+Just like with Readiness Probes, Liveness Probes come in 3 flavors: 
+`HTTP Test`, `TCP Test`, and `Exec Test`. You can also define an
+`initialDelaySeconds`, `periodSeconds`, and `failtureThreshold`, just as you
+would for a Readiness Probe. I won't belabor the configs for each scenario
+since they're essentially identical to Readiness Probes, but here's an example
+of how you might use a Liveness Probe:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata: 
+   name: my-app
+spec:
+   containers:
+      - name: nginx
+        image: nginx
+   
+   readinessProbe:
+      httpGet:
+         path: /api/healthy
+         port: 8080
+      initialDelaySeconds: 15
+      periodSeconds: 5
+      failureThreshold: 8
+   
+   livenessProbe:
+      httpGet:
+         path: /api/healthy
+         port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 15 
+      failureThreshold: 4 
+```
+
+In this case, I'm allowing 4 failed liveness checks, issued every 15 seconds, 
+30 seconds after the Pod's birth.
+
+[Back to top](#quick-links)
+
+
+---
+
+
+## Logging & Monitoring
+
+When you run containers directly on Docker, you can view the logs of a running
+container via `docker logs -f <some-container-id>`. We can view the logs of a
+container running within a Pod using `kubectl logs -f <name-of-pod>`. But what
+if we are running a Pod that has multiple containers running with in? Simple!
+We have to add the name of the container we are targeting like so:
+`kubectl logs -f <name-of-pod> <name-of-container>`. This allows us to view the
+logs of a specific container within the Pod.
+
+Kubernetes comes with a **Metrics Server**. You can have one Metrics Server per
+Kubernetes Cluster, but this is an in-memory monitoring solution, which means
+you cannot view historical performance data. To utilize historic data, you may
+use Prometheus, the ELK stack, Datadog, Dynatrace, etc. to accomplish this.
+
+If you are running in minikube, you will need to enable the metrics server via:
+```bash
+minikube addons enable metrics-server
+```
+For all other environments, you will have to deploy the deployment file via:
+```bash
+# pull the project from git.
+git clone https://github.com/kubernetes-incubator/metrics-server.git
+
+# after locating the deployment file...
+kubectl create -f deploy/1.8+
+```
+
+You can view resource consumpion of nodes via:
+```bash
+kubectl top node
+#> NAME           CPU(cores)   CPU%    MEMORY(bytes)    Memory%
+#> kubemaster     166m         8%      1330Mi           70%
+#> kubenode1      35m          4%      1044Mi           50%
+#> kubenode2      22m          2%      1048Mi           55%
+```
+
+And you can view resource consuption of Pods via:
+```bash
+kubectl top pod
+#> NAME          CPU(cores)    CPU%    MEMORY(bytes)    Memory%
+#> nginx         166m          8%      1330Mi           70%
+#> redis         35m           4%      1044Mi           50%
+```
+
+[Back to top](#quick-links)
+
