@@ -460,15 +460,8 @@ spec:
    * `-o wide`: Output in the plain-text format with any additional information.
    * `-o yaml`: Output a YAML formatted API object.`
 
-<a href="https://www.youtube.com/watch?v=mNK14yXIZF4">
-<img src="https://img.youtube.com/vi/mNK14yXIZF4/0.jpg" alt="How_Kubernetes_deployments_work"></a>
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/mNK14yXIZF4/0.jpg)](https://www.youtube.com/watch?v=mNK14yXIZF4 "How Kubernetes deployments work")
-
-[![How_Kubernetes_deployments_work](https://img.youtube.com/vi/mNK14yXIZF4/0.jpg)](https://www.youtube.com/watch?v=mNK14yXIZF4E)
-
-<a href="http://example.com/" target="_blank">example</a>
-
+Youtube: How Kubernetes deployments work by Microsoft Azure
+[![Everything Is AWESOME](https://img.youtube.com/vi/mNK14yXIZF4/0.jpg)](https://www.youtube.com/watch?v=mNK14yXIZF4 "Youtube: How Kubernetes deployments work by Microsoft Azure")
 
 > **Pro Tip**: You can use the flag `--dry-run` when executing a `kubectl`
   command and it will inform you whether the syntax of the command and config
