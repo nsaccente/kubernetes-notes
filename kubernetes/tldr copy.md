@@ -391,17 +391,17 @@ ReplicaSet was.
 ReplicaSets solve the problem of having enough Pods running to provide high
 availability of our application; but it doesn't make it particularly easy to
 upgrade over time. This is where **Deployments** come in. Deployments will
-make sure that upgrades happen gradually (also known as a rolling upgrade).
+make sure that upgrades happen gradually (also known as a rolling upgrade, aka **rollout**).
 Upgrading Pods gradually helps to ensure that users do not notice any downtime.
+There is another update strategy known as `Recreate`, which you can find more
+information about [here](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#recreate-deployment),
+but it's rare that you will use this in production.
 Deployments also make it easy to rollback to a previous version of software
 if need be. The config for a Deployment is nearly identical to a ReplicaSet's
 config, except we update the `kind` to `Deployment`.
 
 ```yaml
-# Remember, every K8s object has apiVersion, kind, metadata, and a spec.
 apiVersion: apps/v1
-
-# 1. This config is nearly identical to ReplicaSet, except for the kind.
 kind: Deployment
 metadata:
   name: myapp-deployment
@@ -427,19 +427,38 @@ spec:
   replicas: 3
   ```
 
-1. We can create our Deployment with:
-   ```bash
-   kubectl create -f deployment-def.yaml
-   ```
+We have the following commands at our disposal to manipulate the Deployment:
+```bash
+# Create a Deployment from a yaml file.
+kubectl create -f deployment-def.yaml
 
-1. The Deployment automatically creates a ReplicaSet:
+# Get a list of deployments.
+kubectl get deployments
+
+# Apply changes made to the original Deployment yaml file.
+kubectl apply -f deployment-def.yaml
+
+# Change the image used by an existing Deployment.
+kubectl set image deployment/mydeployment-name nginx=nginx:1.9.1
+
+# Get status of a rollout for an existing Deployment.
+kubectl rollout status deployment/mydeployment-name
+
+# View the rollout history for an existing Deployment
+kubectl rollout history deployment/mydeployment-name
+
+# Undo the latest rollout applied to a Deployment.
+kubectl rollout undo deployment/mydeployment-name
+```
+
+* The Deployment automatically creates a ReplicaSet:
    ```bash
    kubectl get replicaset
    #> NAME                       DESIRED    CURRENT    READY    AGE
    #> myapp-deployment-abc123    3          3          3        2m
    ```
 
-1. The ReplicaSet created by the Deployment will subsequently create Pods:
+* The ReplicaSet created by the Deployment will subsequently create Pods:
    ```bash
    kubectl get pods
    #> NAME                             READY STATUS   RESTARTS  AGE
@@ -448,20 +467,17 @@ spec:
    #> myapp-deployment-abc123-xyz003   1/1   Running  0         2m
    ```
 
-1. Now that we seem to be working with a bunch of different K8s objects, we can
+* Now that we seem to be working with a bunch of different K8s objects, we can
    utilize the following to make our lives a bit easier.
    ```bash
    kubectl get all
    ```
 
-1. You can format the output from `kubectl` using one of the following:
+* You can format the output from `kubectl` using one of the following:
    * `-o json`: Output a JSON formatted API object.
    * `-o name`: Print only the resource name and nothing else.
    * `-o wide`: Output in the plain-text format with any additional information.
    * `-o yaml`: Output a YAML formatted API object.`
-
-Youtube: How Kubernetes deployments work by Microsoft Azure
-[![Everything Is AWESOME](https://img.youtube.com/vi/mNK14yXIZF4/0.jpg)](https://www.youtube.com/watch?v=mNK14yXIZF4 "Youtube: How Kubernetes deployments work by Microsoft Azure")
 
 > **Pro Tip**: You can use the flag `--dry-run` when executing a `kubectl`
   command and it will inform you whether the syntax of the command and config
@@ -556,6 +572,132 @@ We can define a custom Namespace in one of two ways:
 
 > **Pro Tip**: We can list all Pods, Deployments, ReplicaSets, etc, across all
   Namespaces via `kubectl get pods --all-namespaces`
+
+[Back to top](#quick-links)
+
+
+---
+
+
+## Jobs
+
+You may require a batch process to run on your K8s cluster, such as performing
+a calculation. For example:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata: 
+   name: math-pod
+spec:
+   containers:
+   -  name: math-add
+      image: ubuntu
+      command: ['expr', '3', '+', '2']
+   restartPolicy: OnFailure
+```
+Take note of `restartPolicy` in the `spec` section. This is a policy that tells
+Kubernetes what to do with the Pod when it dies. There are three possible 
+values for `restartPolicy`:
+   * `Always`: the default for Pod objects, meaning that a Pod will restart 
+     forever (in theory);
+   * `OnFailure`: causes the Pod to restart when it fails;
+   * `Never`: if the Pod doesn't run the first time, don't try again.
+
+This is a great option for one-off batches, but it fails to take advantage of
+the scalability of Kubernetes. This is where **Jobs** come into play:
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+   name: math-add-job
+spec:
+
+   # 1. The template of the Pod to create.
+   template:
+      spec:
+         containers:
+         -  name: math-add
+            image: ubuntu
+            command: ['expr', '3', '+', '2']
+         restartPolicy: OnFailure
+
+   # 2. The number of Pod Completions (no failures or terminations) required.
+   completions: 3
+
+   # 3. The number of Pods to be running at once.
+   parallelism: 3
+```
+
+1. Does `spec.template` look familiar? That's because it's a identical to the
+   spec of the Pod we created above.
+1. Remember the different `restartPolicy` values you might encounter? `Always`,
+   `OnFailure`, and `Never`? Well, using `completions`, we can tell Kubernetes
+   to make sure a certain number of Jobs run to completion.
+1. Using the `parallelism` field, we tell Kubernetes how many Pods to have
+   running at any given time.
+
+We can use the following commands to manipulate Jobs:
+```bash
+# 1. Create the Job.
+kubectl create -f job-def.yaml
+
+# 2. View a list of running Jobs.
+kubectl get jobs
+
+# 3. View the output of the running job (if you printed it to stdout)
+kubectl logs math-add-job-<your-pod-number>
+
+# 4. Delete a running Job, and all the Pods it created.
+kubectl delete job math-add-job
+```
+
+[Back to top](#quick-links)
+
+
+---
+
+## CronJobs
+
+Now that you know how to run Jobs, let's learn schedule them to run 
+periodically using [cron](https://en.wikipedia.org/wiki/Cron):
+```yaml
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+   name: reporting-cron-job
+spec:
+   # 1. Cron schedule string
+   schedule: "*/1 * * * *"
+
+   # 2. Describe the job
+   jobTemplate:
+      spec:
+         template:
+            spec:
+               containers:
+               -  name: reporting-tool
+                  image: reporting-tool
+               restartPolicy: OnFailure
+         completions: 3
+         parallelism: 3
+```
+1. `schedule` takes the cron schedule string which you can build using the
+   guide below, coupled with [this tool](https://crontab.guru/#*/1_*_*_*_*).
+   This particular CronJob runs every minute.
+   ```
+   # ┌───────────── minute (0 - 59)
+   # │ ┌───────────── hour (0 - 23)
+   # │ │ ┌───────────── day of the month (1 - 31)
+   # │ │ │ ┌───────────── month (1 - 12)
+   # │ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday;
+   # │ │ │ │ │                                   7 is also Sunday on some systems)
+   # │ │ │ │ │
+   # │ │ │ │ │
+   # * * * * * <command to execute>
+   ```
+
+2. We describe the Job we are going to run, which is very reminiscent of the
+   `spec` section of the Job yaml we wrote above.
 
 [Back to top](#quick-links)
 
