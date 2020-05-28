@@ -1,11 +1,38 @@
 # tl;dr Certified Kubernetes Application Developer (CKAD)
 
-## Quick Links
-* [Visit the Kubectl Wiki](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)
-* [Read the Kubectl Book](https://kubectl.docs.kubernetes.io/)
-* [Visit the Minikube Wiki](https://minikube.sigs.k8s.io/docs/)
+## Table of Contents
+1. [The Basics](#the-basics)
+   1. [Pods](#pods)
+   1. [Labels, Selectors, and Annotations](#labels-selectors-and-annotations)
+   1. [Replica Sets](#replica-sets)
+   1. [Deployments](#deployments)
+   1. [Namespaces](#namespaces)
+   1. [Jobs](#jobs)
+   1. [CronJobs](#cronjobs)
+1. [Mastering Config-Fu](#mastering-config-fu)
+   1. [Commands and Arguments](#commands-and-arguments)
+   1. [Environment Variables, ConfigMaps, and Secrets](#environment-variables-configmaps-and-secrets)
+   1. [Security Contexts](#security-contexts)
+   1. [Service Accounts](#service-accounts)
+   1. [Resource Requests & Limits](#resource-requests-&-limits)
+   1. [Taints and Tolerations](#taints-and-tolerations)
+   1. [Node Selectors and Affinity](#node-selectors-and-affinity)
+   1. [Using Node Affinity with Taints and Tolerations](#using-node-affinity-with-taints-and-tolerations)
+1. [Multi-Container Pods](#multi-container-pods)
+   1. [Multi-Container Pod Design Patterns](#multi-container-pod-design-patterns)
+1. [Observability](#observability)
+   1. [Status and Conditions](#status-and-conditions)
+   1. [Readiness Probes](#readiness-probes)
+   1. [Liveness Probes](#liveness-probes)
+   1. [Logging & Monitoring](#logging-&-monitoring)
+
+
+
+Welcome to the official unofficial tl;dr documentation for Kubernetes! 
 
 # The Basics
+
+![basicBasicBasic](https://media.giphy.com/media/xUOwG5IshvzNMdzR72/giphy.gif)
 
 ## Pods
 
@@ -51,7 +78,7 @@ Pods run on worker nodes, and are the smallest unit that Kubernetes can
 understand. You will rarely manage pods yourself, and instead, will rely on one
 of Kubernetes' control structures to manage them. **Pods run on worker nodes.**
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -98,7 +125,7 @@ spec:
    case an engineer needs assistance, and who owns the application. This
    information is not visible to Kubernetes. 
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -206,7 +233,7 @@ currently being phased out. The only difference is, a ReplicaSet has a selector
 which gives the ability to manage pods that have been created before the
 ReplicaSet was.
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -309,7 +336,7 @@ kubectl rollout undo deployment/mydeployment-name
   command and it will inform you whether the syntax of the command and config
   are correct, as well as if the resource is able to be created.
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -399,7 +426,7 @@ We can define a custom Namespace in one of two ways:
 > **Pro Tip**: We can list all Pods, Deployments, ReplicaSets, etc, across all
   Namespaces via `kubectl get pods --all-namespaces`
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -477,7 +504,7 @@ kubectl logs math-add-job-<your-pod-number>
 kubectl delete job math-add-job
 ```
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -525,7 +552,7 @@ spec:
 2. We describe the Job we are going to run, which is very reminiscent of the
    `spec` section of the Job yaml we wrote above.
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -535,7 +562,7 @@ spec:
 
 ![configfu](https://media.giphy.com/media/3ov9k6pbxOR7X144h2/giphy.gif)
 
-## Commands and Arguents
+## Commands and Arguments
 Let's say we have a Dockerfile that looks like this:
 ```Dockerfile
 FROM Ubuntu
@@ -567,7 +594,7 @@ spec:
         args: ["10"]
 ```
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -688,7 +715,7 @@ in a production environment. (tl;dr use
 [Google Cloud Key Management Service](https://cloud.google.com/kms/), or
 [Azure Key Vault](https://azure.microsoft.com/en-in/services/key-vault/)).
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -770,7 +797,7 @@ you can read more about
 [here](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container),
 but this should do for a tl;dr article for now.
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -877,7 +904,7 @@ however, you can update the ServiceAccount used by `containers` of Deployment
 objects, thanks to rolling upgrade of the Pods associated with the Deployment.
 
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 --- 
@@ -959,7 +986,7 @@ The above yaml reads as follows:
 1. and a memory limit of 512 Mibibytes.
 
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 --- 
@@ -1027,7 +1054,7 @@ kubectl taint nodes <node-name> <key>=<value>:<taint-effect>
   need (which I don't recommend), but you can view this taint via
   `kubectl describe node kubemaster | grep Taint`.
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -1182,13 +1209,13 @@ replacing section 5 with:
    operator: In
 ```
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
 
 
-## Node Affinity + Taints & Tolerations = An OCD Daydream
+## Using Node Affinity with Taints and Tolerations
 
 Using Node Affinity, Taints, and Tolerations, we have finer control over where
 Pods get scheduled. Refer to the gif below:
@@ -1321,7 +1348,7 @@ There's a lot going on here, so let's break it down:
       * the two uncolored Pods are not scheduled on any of the colored Nodes,
         but instead, are scheduled arbitrarily across the "Other" Nodes.
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -1371,7 +1398,7 @@ There are three common Multi-Container Pod patterns we will be discussing:
    ![ambassador_pattern.png](./.assets/ambassador_pattern.png)
   
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -1420,7 +1447,7 @@ Conditions:
    PodScheduled: True
 ```
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -1513,7 +1540,7 @@ spec:
 Having Pods configured with Readiness Probes that reflect true readiness is
 important in developing production applications.
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -1576,7 +1603,7 @@ spec:
 In this case, I'm allowing 4 failed liveness checks, issued every 15 seconds, 
 30 seconds after the Pod's birth.
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 
 
 ---
@@ -1627,5 +1654,5 @@ kubectl top pod
 #> redis         35m           4%      1044Mi           50%
 ```
 
-[Back to top](#quick-links)
+[Back to top](#table-of-contents)
 

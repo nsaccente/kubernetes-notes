@@ -1,24 +1,25 @@
-
 # tl;dr Kubernetes 
+
+## Table of Contents
+1. [Prerequisites](#prerequisites)
+1. [Install Kubectl](#install-kubectl)
+1. [Install Minikube](#install-minikube)
+1. [Additional Resources](#additional-resources)
+
+
+---
+
 
 ## Prerequisites
 * Be comfortable in [YAML](https://www.youtube.com/watch?time_continue=83&v=cdLNKUoMc6c&feature=emb_title) ✍ 
 * Be comfortable with the concept of Docker containers and virtualization
   ([this is a great place to start](https://www.youtube.com/watch?v=TvnZTi_gaNc))
 
-If you don't meet both of these prereq's, give this videos a watch, do your own
-research, and come back later!
-
-## Table of Contents
-1. [Install Kubectl](#install-kubectl)
-
-
-
-
 Welcome to a **No Nonsense** guide to Kubernetes. I promise to do my best to
 introduce material in a logical manner, provide production-centric examples,
 pepper in memes and gifs to keep things feeling fresh, and explain 
-complicated material as simply as possible. 
+complicated material as simply as possible. If you don't meet both of these 
+prereq's, give this videos a watch, do your own research, and come back later!
 
 
 ## Install Kubectl
@@ -75,27 +76,27 @@ _[Add Windows or MacOS instructions with a pull request!](https://github.com/str
 </summary> 
 
 1. Install either [KVM](https://www.linux-kvm.org/page/Main_Page) (which also
-    uses QEMU) or [Virtualbox](https://www.virtualbox.org/wiki/Downloads).
+   uses QEMU) or [Virtualbox](https://www.virtualbox.org/wiki/Downloads).
 
     * If you are a **RHEL/CentOS/Fedora user installing VirtualBox**, you might
-        encounter:
-        ```
-        This system is currently not set up to build kernel modules.
-        Please install the gcc make perl packages from your distribution.
-        Please install the Linux kernel "header" files matching the current kernel
-        for adding new hardware support to the system.
-        The distribution packages containing the headers are probably:
-        kernel-devel kernel-devel-5.3.7-301.fc31.x86_64
+      encounter:
+      ```
+      This system is currently not set up to build kernel modules.
+      Please install the gcc make perl packages from your distribution.
+      Please install the Linux kernel "header" files matching the current kernel
+      for adding new hardware support to the system.
+      The distribution packages containing the headers are probably:
+      kernel-devel kernel-devel-5.3.7-301.fc31.x86_64
 
-        There were problems setting up VirtualBox.  To re-start the set-up process, run
-        /sbin/vboxconfig
-        as root.  If your system is using EFI Secure Boot you may need to sign the
-        kernel modules (vboxdrv, vboxnetflt, vboxnetadp, vboxpci) before you can load
-        them. Please see your Linux system's documentation for more information.
-        ```
+      There were problems setting up VirtualBox.  To re-start the set-up process, run
+      /sbin/vboxconfig
+      as root.  If your system is using EFI Secure Boot you may need to sign the
+      kernel modules (vboxdrv, vboxnetflt, vboxnetadp, vboxpci) before you can load
+      them. Please see your Linux system's documentation for more information.
+      ```
 
-        This may cause some extra complication, but I've found that the simplest
-        solution is to just disable secure boot in your bios.
+      This may cause some extra complication, but I've found that the simplest
+      solution is to just disable secure boot in your bios.
 
     * If you don't want to use a VM, use the `--driver=none` flag to run Kubernetes
         components directly on the host. Using this driver requires
