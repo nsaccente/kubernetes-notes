@@ -465,9 +465,7 @@ spec:
   are correct, as well as if the resource is able to be created.
 
 
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/mNK14yXIZF4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
+![youtube](https://www.youtube.com/embed/mNK14yXIZF4)
 
 [Back to top](#quick-links)
 
