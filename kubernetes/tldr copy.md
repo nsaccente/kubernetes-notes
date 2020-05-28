@@ -460,12 +460,18 @@ spec:
    * `-o wide`: Output in the plain-text format with any additional information.
    * `-o yaml`: Output a YAML formatted API object.`
 
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=mNK14yXIZF4"><img src="https://img.youtube.com/vi/mNK14yXIZF4/0.jpg" alt="How_Kubernetes_deployments_work"></a>
+</div>
+
+[![Everything Is AWESOME](https://img.youtube.com/vi/mNK14yXIZF4/0.jpg)](https://www.youtube.com/watch?v=mNK14yXIZF4 "How Kubernetes deployments work")
+
+[![How_Kubernetes_deployments_work](https://img.youtube.com/vi/mNK14yXIZF4/0.jpg)](https://www.youtube.com/watch?v=mNK14yXIZF4E)
+
+
 > **Pro Tip**: You can use the flag `--dry-run` when executing a `kubectl`
   command and it will inform you whether the syntax of the command and config
   are correct, as well as if the resource is able to be created.
-
-
-![youtube](https://www.youtube.com/embed/mNK14yXIZF4)
 
 [Back to top](#quick-links)
 
