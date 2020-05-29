@@ -14,7 +14,7 @@
    1. [Environment Variables, ConfigMaps, and Secrets](#environment-variables-configmaps-and-secrets)
    1. [Security Contexts](#security-contexts)
    1. [Service Accounts](#service-accounts)
-   1. [Resource Requests & Limits](#resource-requests-&-limits)
+   1. [Resource Requests and Limits](#resource-requests-and-limits)
    1. [Taints and Tolerations](#taints-and-tolerations)
    1. [Node Selectors and Affinity](#node-selectors-and-affinity)
    1. [Using Node Affinity with Taints and Tolerations](#using-node-affinity-with-taints-and-tolerations)
@@ -24,8 +24,8 @@
    1. [Status and Conditions](#status-and-conditions)
    1. [Readiness Probes](#readiness-probes)
    1. [Liveness Probes](#liveness-probes)
-   1. [Logging & Monitoring](#logging-&-monitoring)
-
+   1. [Logging and Monitoring](#logging-and-monitoring)
+1. [Services and Networking](#services-and-networking)
 
 
 Welcome to the official unofficial tl;dr documentation for Kubernetes! These
@@ -917,7 +917,7 @@ objects, thanks to rolling upgrade of the Pods associated with the Deployment.
 --- 
 
 
-## Resource Requests & Limits 
+## Resource Requests and Limits 
 
 Worker nodes have a limited pool of resources (CPU, memory and disk), so the
 K8s scheduler schedules Pods in such a way to avoid starvation. We can include
@@ -1616,7 +1616,7 @@ In this case, I'm allowing 4 failed liveness checks, issued every 15 seconds,
 ---
 
 
-## Logging & Monitoring
+## Logging and Monitoring
 
 When you run containers directly on Docker, you can view the logs of a running
 container via `docker logs -f <some-container-id>`. We can view the logs of a
