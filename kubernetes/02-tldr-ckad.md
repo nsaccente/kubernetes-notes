@@ -28,7 +28,14 @@
 
 
 
-Welcome to the official unofficial tl;dr documentation for Kubernetes! 
+Welcome to the official unofficial tl;dr documentation for Kubernetes! These
+are my notes from the Udemy course entitled:
+[Kubernetes Certified Application Developer (CKAD) with Tests](https://www.udemy.com/share/1013BQAkMad15TTX4=/). 
+This is a paid course, but almost all courses on Udemy go on sale for anywhere
+between $9 - $13 USD. I wouldn't recommend paying more than that for a course
+on Udemy, since they are constantly on sale. This guy does a great job of
+explaining the material, and I couldn't recommend him enough! With that out of
+the way, let's get started!
 
 # The Basics
 
@@ -1628,6 +1635,7 @@ If you are running in minikube, you will need to enable the metrics server via:
 ```bash
 minikube addons enable metrics-server
 ```
+
 For all other environments, you will have to deploy the deployment file via:
 ```bash
 # pull the project from git.
@@ -1656,3 +1664,95 @@ kubectl top pod
 
 [Back to top](#table-of-contents)
 
+
+---
+
+
+# Services and Networking
+
+A Kubernetes **Service** object enables communications with components within,
+and outside of, the application. You can think of Services like doors; sure
+there are other ways to get into the house (e.g. windows, trap doors, the
+cimney), but the front door is your best bet! In the diagram below, take note
+of the fact that Services really are the gatekeepers of communication. We see
+users outside of the node accessing a Pod; we see Pods talking to eachother;
+and we see a Pod reach outside of the Node to an external database.
+
+![services_as_doors.png](./.assets/services_as_doors.png)
+
+There are three kinds of services:
+1. `LoadBalancer`: Provisions a loadbalancer for the application
+2. `ClusterIP`: Service creates virtual IP within cluster to enable 
+   communication between different services.
+3. `NodePort`: Service makes an internal port accessible on a port on the Node.
+   ![node_port.png](./.assets/node_port.png)
+   In the diagram below, take notice of:
+   1. `targetPort`: field that refers to the Port of the Pod you wish to 
+      target.
+   1. `port`: field that refers to the port on the service itself. The Service
+      acts a lot like a virtual server, having it's own IP address for routing,
+      which is the *cluster IP of the service*.
+   1. `nodePort`: which is the port being exposed from the Node. Note that the
+      valid port range for NodePorts being opened is 30000 - 32767.
+
+   Let's say that we wanted to create a NodePort for the following Pod 
+   definition:
+   ```yaml
+   apiVersion: v1
+   kind: Pod
+   metadata:
+      name: myapp-pod
+      labels:
+         app: myapp
+         type: front-end
+   spec:
+      containers:
+      -  name: nginx-container
+         image: nginx
+   ```
+   
+   What follows is a the yaml definition file for the NodePort Service object.
+   ```yaml
+   apiVersion: v1
+   kind: Service
+   metadata:
+      name: myapp-service
+   spec:
+
+      # 1. Specifies that we are creating a NodePort Service object.
+      type: NodePort
+
+      # 2. Port details as defined above.
+      ports:
+      -  targetPort: 80
+         port: 80
+         nodePort: 30008
+      
+      # 3. Use a selector to specify what Pods to target.
+      selector:
+         app: myapp
+         type: front-end
+   ```
+
+   1. Tell K8s that you want to make a NodePort Service object.
+   1. Tell the NodePort what ports it should care about.
+   1. Using a selector with the labels of the Pod definition from above, we
+      tell the NodePort to target `myapp-pod`.
+
+   Now, from the command line:
+   ```bash
+   kubectl create -f service-def.yaml
+   #> service "myapp-service" created
+
+   kubectl get services
+   #> NAME              TYPE        CLUSTER-IP        EXTERNAL-IP    PORT(S)           AGE
+   #> kubernetes        ClusterIP   10.96.0.1         <none>         443/TCP           22d
+   #> myapp-service     NodePort    10.106.127.123    <none>         80:30008/TCP      18m
+
+   curl https://<physical-ip-of-your-node>:30008
+   ```
+
+   If there are multiple Pods that match the selector, Kubernetes will select
+   one at random to route the traffic to. This behavior can be changed, as
+   described 
+   [here](https://kubernetes.io/docs/concepts/services-networking/service/).
