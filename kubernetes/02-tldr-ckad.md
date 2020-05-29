@@ -9,6 +9,7 @@
    1. [Namespaces](#namespaces)
    1. [Jobs](#jobs)
    1. [CronJobs](#cronjobs)
+   1. [Multi-Container Pod Design Patterns](#multi-container-pod-design-patterns)
 1. [Mastering Config-Fu](#mastering-config-fu)
    1. [Commands and Arguments](#commands-and-arguments)
    1. [Environment Variables, ConfigMaps, and Secrets](#environment-variables-configmaps-and-secrets)
@@ -18,14 +19,16 @@
    1. [Taints and Tolerations](#taints-and-tolerations)
    1. [Node Selectors and Affinity](#node-selectors-and-affinity)
    1. [Using Node Affinity with Taints and Tolerations](#using-node-affinity-with-taints-and-tolerations)
-1. [Multi-Container Pods](#multi-container-pods)
-   1. [Multi-Container Pod Design Patterns](#multi-container-pod-design-patterns)
 1. [Observability](#observability)
    1. [Status and Conditions](#status-and-conditions)
    1. [Readiness Probes](#readiness-probes)
    1. [Liveness Probes](#liveness-probes)
    1. [Logging and Monitoring](#logging-and-monitoring)
 1. [Services and Networking](#services-and-networking)
+   1. [Services](#services)
+   1. [LoadBalancer Service](#loadbalancer-service)
+   1. [ClusterIP Service](#clusterip-service)
+   1. [NodePort Service](#nodeport-service)
 
 
 Welcome to the official unofficial tl;dr documentation for Kubernetes! These
@@ -563,6 +566,54 @@ spec:
 
 
 ---
+
+
+## Multi-Container Pod Design Patterns
+So far, we have been working with a singleton Pods which encapsulate a single
+container. Now, we will be working with Multi-Container Pods, which is
+something you are more likely to encounter in the wild.
+
+There are three common Multi-Container Pod patterns we will be discussing:
+
+1. **The Sidecar Pattern**: deploying a container alongside the application
+   to handle some minor task. For example, we may deploy a log-agent alongside
+   a web server to collect logs and forward them to a central log server.
+![sidecar_pattern.png](./.assets/sidecar_pattern.png)
+
+   What if we have a central logging server, and a bunch of different
+   applications logging to a central logging server using different logging
+   formats? This is where the next pattern comes in...
+
+
+1. **The Adapter Pattern**: deploy an additional container to allow services
+   to cooperate that otherwise wouldn't be able to. This allows you to simply
+   deploy a different sidecar container to _adapt_ to new situations as they 
+   arise (e.g. change of backend). 
+
+   For example, you may have three applications with logging agents that
+   generate logs in completely different formats. An adapter container is
+   deployed alongside those logging-agents to normalize the log data before
+   sending it off to the central logging server.
+
+   ![adapter_pattern.png](./.assets/adapter_pattern.png)
+
+1. **The Ambassador Pattern**: an "ambassador container" is deployed, which
+   essentially acts like a proxy that allows other containers to connect
+   to a port on localhost while the ambassador container proxies the connection
+   to the appropriate server. For example, say you have different logging 
+   servers for development, testing, and production deployments. Using an
+   ambassador, we can send all of our logging data to a given port over
+   localhost, which wouldn't require changing the source code of the 
+   application.
+
+   ![ambassador_pattern.png](./.assets/ambassador_pattern.png)
+  
+
+[Back to top](#table-of-contents)
+
+
+---
+
 
 
 # Mastering Config-Fu
@@ -1361,59 +1412,9 @@ There's a lot going on here, so let's break it down:
 ---
 
 
-# Multi-Container Pods
-![Multi_ContainerPods](https://media.giphy.com/media/K4x1ZL36xWCf6/giphy.gif)
-
-## Multi-Container Pod Design Patterns
-So far, we have been working with a singleton Pods which encapsulate a single
-container. Now, we will be working with Multi-Container Pods, which is
-something you are more likely to encounter in the wild.
-
-There are three common Multi-Container Pod patterns we will be discussing:
-
-1. **The Sidecar Pattern**: deploying a container alongside the application
-   to handle some minor task. For example, we may deploy a log-agent alongside
-   a web server to collect logs and forward them to a central log server.
-![sidecar_pattern.png](./.assets/sidecar_pattern.png)
-
-   What if we have a central logging server, and a bunch of different
-   applications logging to a central logging server using different logging
-   formats? This is where the next pattern comes in...
-
-
-1. **The Adapter Pattern**: deploy an additional container to allow services
-   to cooperate that otherwise wouldn't be able to. This allows you to simply
-   deploy a different sidecar container to _adapt_ to new situations as they 
-   arise (e.g. change of backend). 
-
-   For example, you may have three applications with logging agents that
-   generate logs in completely different formats. An adapter container is
-   deployed alongside those logging-agents to normalize the log data before
-   sending it off to the central logging server.
-
-   ![adapter_pattern.png](./.assets/adapter_pattern.png)
-
-1. **The Ambassador Pattern**: an "ambassador container" is deployed, which
-   essentially acts like a proxy that allows other containers to connect
-   to a port on localhost while the ambassador container proxies the connection
-   to the appropriate server. For example, say you have different logging 
-   servers for development, testing, and production deployments. Using an
-   ambassador, we can send all of our logging data to a given port over
-   localhost, which wouldn't require changing the source code of the 
-   application.
-
-   ![ambassador_pattern.png](./.assets/ambassador_pattern.png)
-  
-
-[Back to top](#table-of-contents)
-
-
----
-
-
 # Observability
 
-![halfway_there](https://media.tenor.com/images/296f6ea547c00dd8dc806cf139574eb5/tenor.gif)
+![paintingThatWatchesYou](https://i.pinimg.com/originals/36/17/bd/3617bd4b431b8f6634867bf077a864d2.gif)
 
 ## Status and Conditions
 
@@ -1670,6 +1671,9 @@ kubectl top pod
 
 # Services and Networking
 
+![networkToGetWork](https://media1.tenor.com/images/065bbd14deb33c2e4f21cf0f35a188b5/tenor.gif?itemid=12765145)
+
+## Services 
 A Kubernetes **Service** object enables communications with components within,
 and outside of, the application. You can think of Services like doors; sure
 there are other ways to get into the house (e.g. windows, trap doors, the
@@ -1680,79 +1684,307 @@ and we see a Pod reach outside of the Node to an external database.
 
 ![services_as_doors.png](./.assets/services_as_doors.png)
 
-There are three kinds of services:
-1. `LoadBalancer`: Provisions a loadbalancer for the application
-2. `ClusterIP`: Service creates virtual IP within cluster to enable 
+There are three kinds of Service objects:
+1. **LoadBalancer**: Provisions a loadbalancer for the application
+1. **ClusterIP**: Service creates virtual IP within cluster to enable 
    communication between different services.
-3. `NodePort`: Service makes an internal port accessible on a port on the Node.
-   ![node_port.png](./.assets/node_port.png)
-   In the diagram below, take notice of:
-   1. `targetPort`: field that refers to the Port of the Pod you wish to 
-      target.
-   1. `port`: field that refers to the port on the service itself. The Service
-      acts a lot like a virtual server, having it's own IP address for routing,
-      which is the *cluster IP of the service*.
-   1. `nodePort`: which is the port being exposed from the Node. Note that the
-      valid port range for NodePorts being opened is 30000 - 32767.
+1. **NodePort**: Service makes an internal port accessible through a port on
+   the Node.
 
-   Let's say that we wanted to create a NodePort for the following Pod 
-   definition:
-   ```yaml
-   apiVersion: v1
-   kind: Pod
-   metadata:
-      name: myapp-pod
-      labels:
-         app: myapp
-         type: front-end
-   spec:
-      containers:
-      -  name: nginx-container
-         image: nginx
-   ```
-   
-   What follows is a the yaml definition file for the NodePort Service object.
-   ```yaml
-   apiVersion: v1
-   kind: Service
-   metadata:
-      name: myapp-service
-   spec:
+We will elaborate on the three Service types, and create a respective object
+for the following Pod config:
 
-      # 1. Specifies that we are creating a NodePort Service object.
-      type: NodePort
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+   name: myapp-pod
+   labels:
+      app: myapp
+      type: back-end
+spec:
+   containers:
+   -  name: nginx-container
+      image: nginx
+```
 
-      # 2. Port details as defined above.
-      ports:
-      -  targetPort: 80
-         port: 80
-         nodePort: 30008
-      
-      # 3. Use a selector to specify what Pods to target.
-      selector:
-         app: myapp
-         type: front-end
-   ```
+[Back to top](#table-of-contents)
 
-   1. Tell K8s that you want to make a NodePort Service object.
-   1. Tell the NodePort what ports it should care about.
-   1. Using a selector with the labels of the Pod definition from above, we
-      tell the NodePort to target `myapp-pod`.
 
-   Now, from the command line:
-   ```bash
-   kubectl create -f service-def.yaml
-   #> service "myapp-service" created
+---
 
-   kubectl get services
-   #> NAME              TYPE        CLUSTER-IP        EXTERNAL-IP    PORT(S)           AGE
-   #> kubernetes        ClusterIP   10.96.0.1         <none>         443/TCP           22d
-   #> myapp-service     NodePort    10.106.127.123    <none>         80:30008/TCP      18m
 
-   curl https://<physical-ip-of-your-node>:30008
-   ```
+## LoadBalancer Service
+To reiterate, a **LoadBalancer** Service object provisions a loadbalancer for
+the application.
 
-   If there are multiple Pods that match the selector, Kubernetes will select
-   one at random to route the traffic to. This behavior can be changed, as
-   described 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[Back to top](#table-of-contents)
+
+
+---
+
+
+## ClusterIP Service
+To reiterate, a **ClusterIP** Service object creates a virtual IP within the
+cluster to enable communication between different services.
+
+![clusterip.png](./.assets/clusterip.png)
+
+In the diagram above, we are routing `front-end` to `back-end`, and `back-end`
+to `redis`; all enabled with the use of services. Let's create a ClusterIP
+Service object that routes `front-end` to `back-end`.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+   name: back-end
+spec:
+
+   # 1. Specifies that we are creating a ClusterIP Service object,
+   type: ClusterIP
+
+   # 2. Port details.
+   ports:
+   -  targetPort: 80
+      port: 80
+
+   # 3. Use a selector to specify what Pods to target.
+   selector:
+      app: myapp
+      type: back-end
+```
+1. Tell K8s that you want to make a ClusterIP Service object.
+1. Tell the ClusterIP Service what ports it should care about; `port` specifies
+   the port that the Service is listening on, and the `targetPort` specifies
+   the port that the target Pod is listening on.
+1. Using a selector with the labels of the Pod definition from above, we
+   tell the NodePort to target `myapp-pod`. This will select all Pods matching
+   this selector, and randomly route traffic to one of them. Of course, to
+   learn how to change this random behavior, see
    [here](https://kubernetes.io/docs/concepts/services-networking/service/).
+
+[Back to top](#table-of-contents)
+
+
+---
+
+
+## NodePort Service
+To reiterate, a **NodePort** Service object makes an internal port accessible
+through a port on the Node.
+
+![node_port.png](./.assets/node_port.png)
+
+In the diagram above, take notice of:
+1. `targetPort`: field that refers to the Port of the Pod you wish to 
+   target.
+1. `port`: field that refers to the port on the service itself. The Service
+   acts a lot like a virtual server, having it's own IP address for routing,
+   which is the *cluster IP of the service*.
+1. `nodePort`: which is the port being exposed from the Node. Note that the
+   valid port range for NodePorts being opened is 30000 - 32767.
+
+Let's create a NodePort Service definition file for `myapp-pod`, referenced
+in the [Services](#services) section.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+   name: myapp-service
+spec:
+
+   # 1. Specifies that we are creating a NodePort Service object.
+   type: NodePort
+
+   # 2. Port details as defined above.
+   ports:
+   -  targetPort: 80
+      port: 80
+      nodePort: 30008
+   
+   # 3. Use a selector to specify what Pods to target.
+   selector:
+      app: myapp
+      type: back-end
+```
+
+1. Tell K8s that you want to make a NodePort Service object.
+1. Tell the NodePort what ports it should care about.
+1. Using a selector with the labels of the Pod definition from above, we
+   tell the NodePort to target `myapp-pod`.
+
+Now, from the command line:
+```bash
+kubectl create -f service-def.yaml
+#> service "myapp-service" created
+
+kubectl get services
+#> NAME              TYPE        CLUSTER-IP        EXTERNAL-IP    PORT(S)           AGE
+#> kubernetes        ClusterIP   10.96.0.1         <none>         443/TCP           22d
+#> myapp-service     NodePort    10.106.127.123    <none>         80:30008/TCP      18m
+
+curl https://<physical-ip-of-your-node>:30008
+```
+
+If there are multiple Pods that match the selector, Kubernetes will select
+one at random to route the traffic to. This behavior can be changed, as
+described 
+[here](https://kubernetes.io/docs/concepts/services-networking/service/).
+
+
+[Back to top](#table-of-contents)
+
+
+---
+
+## Ingress Controllers
+Let's say you own a website that has several applications accessible through
+different paths. For example, `google.com/voice`, `google.com/hangouts`, etc...
+Normally, your browser would perform a DNS lookup for `google.com`, and route
+all traffic to whatever IP resolves. You would need to utilize a NodePort to
+expose a port, and then a series of LoadBalancers to route traffic to Pods in
+a scalable fashion. If you are on GCP, Azure, or AWS, you must pay for each
+LoadBalancer, not to mention the fact that you have to implement SSL/TLS
+through each hop, configure firewall rules for each service, etc...
+
+This is becoming a headache, but thankfully, you can manage all of this
+directly from the Kubernetes cluster with the use of an **Ingress**.
+Ingress helps your users access your application through a single externally-
+accesible URL that you can configure to route to different services within your
+cluster. Oh, and you can configure it to use SSL! To begin setting up an 
+Ingress, we must deploy an **Ingress Controller**, which is an application that
+handles the proxying logic for us. You can use Nginx, Contour, HAProxy, 
+Traefik, Istio, or some other application, but we will be using Nginx in this
+example. Let's learn about configuring an Ingress Controller:
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+   name: nginx-ingress-controller
+spec:
+   replicas: 1
+   selector:
+      matchLabels:
+         name: nginx-ingress
+   template:
+      metadata:
+         labels:
+            name: nginx-ingress
+      spec:
+         containers:
+         -  name: nginx-ingress-controller
+            image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.21.0
+         
+         # 1. Command to run nginx server
+         args:
+            - /nginx-ingress-controller
+            - --configmap-$(POD_NAMESPACE)/nginx-configuration
+         
+         # 2. Injecting environment variables into the Pod,
+         env:
+         -  name: POD_NAME
+            valueFrom:
+               fieldRef:
+                  fieldPath: metadata.name
+         - name: POD_NAMESPACE
+            valueFrom:
+               fieldRef:
+                  fieldPath: metadata.namespace
+               
+         # 3.
+         ports:
+         -  name: http
+            containerPort: 80
+         -  name: https
+            containerPorts: 443
+         
+```
+1. 
+
+
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+   name: nginx-ingress
+spec:
+   type: NodePort
+   ports:
+   -  port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+   -  port: 443
+      targetPort: 443
+      protocol: TCP
+      name: https
+   selector:
+      name: nginx-ingress
+```
+
+
+
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+   name: nginx-ingress-serviceaccount
+```
+
+
+
+
+```yaml
+kind: ConfigMap
+apiVersion: V1
+metadata:
+   name: nginx-configuration
+```
+
+
+## Ingress Resources
