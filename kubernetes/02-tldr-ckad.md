@@ -29,7 +29,8 @@
    1. [LoadBalancer Service](#loadbalancer-service)
    1. [ClusterIP Service](#clusterip-service)
    1. [NodePort Service](#nodeport-service)
-
+   1. [Ingress Controllers](#ingress-controllers)
+   1. [Ingress Resources](#ingress-resources)
 
 Welcome to the official unofficial tl;dr documentation for Kubernetes! These
 are my notes from the Udemy course entitled:
@@ -1685,7 +1686,8 @@ and we see a Pod reach outside of the Node to an external database.
 ![services_as_doors.png](./.assets/services_as_doors.png)
 
 There are three kinds of Service objects:
-1. **LoadBalancer**: Provisions a loadbalancer for the application
+1. **LoadBalancer**:  Exposes Pods externally using a cloud provider’s 
+   load balancer.
 1. **ClusterIP**: Service creates virtual IP within cluster to enable 
    communication between different services.
 1. **NodePort**: Service makes an internal port accessible through a port on
@@ -1715,9 +1717,9 @@ spec:
 
 
 ## LoadBalancer Service
-To reiterate, a **LoadBalancer** Service object provisions a loadbalancer for
-the application.
 
+To reiterate, a **LoadBalancer** Service exposes Pods externally using a
+cloud provider’s load balancer.
 
 
 
@@ -1765,6 +1767,7 @@ the application.
 
 
 ## ClusterIP Service
+
 To reiterate, a **ClusterIP** Service object creates a virtual IP within the
 cluster to enable communication between different services.
 
@@ -1811,6 +1814,7 @@ spec:
 
 
 ## NodePort Service
+
 To reiterate, a **NodePort** Service object makes an internal port accessible
 through a port on the Node.
 
@@ -1822,8 +1826,8 @@ In the diagram above, take notice of:
 1. `port`: field that refers to the port on the service itself. The Service
    acts a lot like a virtual server, having it's own IP address for routing,
    which is the *cluster IP of the service*.
-1. `nodePort`: which is the port being exposed from the Node. Note that the
-   valid port range for NodePorts being opened is 30000 - 32767.
+1. `nodePort`: which is the port being exposed from the Node. The default port
+   range is 30000 - 32767, but this can be assigned to any ephemeral port.
 
 Let's create a NodePort Service definition file for `myapp-pod`, referenced
 in the [Services](#services) section.
@@ -1879,7 +1883,9 @@ described
 
 ---
 
+
 ## Ingress Controllers
+
 Let's say you own a website that has several applications accessible through
 different paths. For example, `google.com/voice`, `google.com/hangouts`, etc...
 Normally, your browser would perform a DNS lookup for `google.com`, and route
@@ -1918,28 +1924,28 @@ spec:
          -  name: nginx-ingress-controller
             image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.21.0
          
-         # 1. Command to run nginx server
-         args:
-            - /nginx-ingress-controller
-            - --configmap-$(POD_NAMESPACE)/nginx-configuration
-         
-         # 2. Injecting environment variables into the Pod,
-         env:
-         -  name: POD_NAME
-            valueFrom:
-               fieldRef:
-                  fieldPath: metadata.name
-         - name: POD_NAMESPACE
-            valueFrom:
-               fieldRef:
-                  fieldPath: metadata.namespace
-               
-         # 3.
-         ports:
-         -  name: http
-            containerPort: 80
-         -  name: https
-            containerPorts: 443
+            # 1. Command to run nginx server
+            args:
+               - /nginx-ingress-controller
+               - --configmap-$(POD_NAMESPACE)/nginx-configuration
+            
+            # 2. Injecting environment variables into the Pod,
+            env:
+            -  name: POD_NAME
+               valueFrom:
+                  fieldRef:
+                     fieldPath: metadata.name
+            - name: POD_NAMESPACE
+               valueFrom:
+                  fieldRef:
+                     fieldPath: metadata.namespace
+                  
+            # 3.
+            ports:
+            -  name: http
+               containerPort: 80
+            -  name: https
+               containerPorts: 443
          
 ```
 1. 
