@@ -1,36 +1,37 @@
 # tl;dr Certified Kubernetes Application Developer (CKAD)
 
 ## Table of Contents
-1. [The Basics](#the-basics)
-   1. [Pods](#pods)
-   1. [Labels, Selectors, and Annotations](#labels-selectors-and-annotations)
-   1. [Replica Sets](#replica-sets)
-   1. [Deployments](#deployments)
-   1. [Namespaces](#namespaces)
-   1. [Jobs](#jobs)
-   1. [CronJobs](#cronjobs)
-   1. [Multi-Container Pod Design Patterns](#multi-container-pod-design-patterns)
-1. [Mastering Config-Fu](#mastering-config-fu)
-   1. [Commands and Arguments](#commands-and-arguments)
-   1. [Environment Variables, ConfigMaps, and Secrets](#environment-variables-configmaps-and-secrets)
-   1. [Security Contexts](#security-contexts)
-   1. [Service Accounts](#service-accounts)
-   1. [Resource Requests and Limits](#resource-requests-and-limits)
-   1. [Taints and Tolerations](#taints-and-tolerations)
-   1. [Node Selectors and Affinity](#node-selectors-and-affinity)
-   1. [Using Node Affinity with Taints and Tolerations](#using-node-affinity-with-taints-and-tolerations)
-1. [Observability](#observability)
-   1. [Status and Conditions](#status-and-conditions)
-   1. [Readiness Probes](#readiness-probes)
-   1. [Liveness Probes](#liveness-probes)
-   1. [Logging and Monitoring](#logging-and-monitoring)
-1. [Services and Networking](#services-and-networking)
-   1. [Services](#services)
-   1. [LoadBalancer Service](#loadbalancer-service)
-   1. [ClusterIP Service](#clusterip-service)
-   1. [NodePort Service](#nodeport-service)
-   1. [Ingress Controllers](#ingress-controllers)
-   1. [Ingress Resources](#ingress-resources)
+- [tl;dr Certified Kubernetes Application Developer (CKAD)](#tldr-certified-kubernetes-application-developer-ckad)
+  - [Table of Contents](#table-of-contents)
+- [The Basics](#the-basics)
+  - [Pods](#pods)
+  - [Labels, Selectors and Annotations](#labels-selectors-and-annotations)
+  - [Replica Sets](#replica-sets)
+  - [Deployments](#deployments)
+  - [Namespaces](#namespaces)
+  - [CronJobs](#cronjobs)
+  - [Multi-Container Pod Design Patterns](#multi-container-pod-design-patterns)
+- [Mastering Config-Fu](#mastering-config-fu)
+  - [Commands and Arguments](#commands-and-arguments)
+  - [Environment Variables, ConfigMaps, and Secrets](#environment-variables-configmaps-and-secrets)
+  - [Security Contexts](#security-contexts)
+  - [Service Accounts](#service-accounts)
+  - [Resource Requests and Limits](#resource-requests-and-limits)
+  - [Taints and Tolerations](#taints-and-tolerations)
+  - [Node Selectors and Affinity](#node-selectors-and-affinity)
+  - [Using Node Affinity with Taints and Tolerations](#using-node-affinity-with-taints-and-tolerations)
+- [Observability](#observability)
+  - [Status and Conditions](#status-and-conditions)
+  - [Readiness Probes](#readiness-probes)
+  - [Liveness Probes](#liveness-probes)
+  - [Logging and Monitoring](#logging-and-monitoring)
+- [Services and Networking](#services-and-networking)
+  - [Services](#services)
+  - [LoadBalancer Service](#loadbalancer-service)
+  - [ClusterIP Service](#clusterip-service)
+  - [NodePort Service](#nodeport-service)
+  - [Ingress Controllers](#ingress-controllers)
+  - [Ingress Resources](#ingress-resources)
 
 Welcome to the official unofficial tl;dr documentation for Kubernetes! These
 are my notes from the Udemy course entitled:
@@ -1719,45 +1720,15 @@ spec:
 ## LoadBalancer Service
 
 To reiterate, a **LoadBalancer** Service exposes Pods externally using a
-cloud provider’s load balancer.
+cloud provider’s load balancer. 
 
+![credit: Ahmet Alp Balkan](https://miro.medium.com/max/1400/1*P-10bQg_1VheU9DRlvHBTQ.png)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+A LoadBalancer Service object will give you a single IP address that will
+forward all traffic to your service, exposing it to the BBI (Big Bad Internet).
+Your particular implementation of the LoadBalancer may vary depending on which
+cloud provider you use, so I'll link you to the
+[Kubernetes Documentation](https://kubernetes.io/docs/concepts/services-networking/#loadbalancer) for more info.
 
 
 [Back to top](#table-of-contents)
@@ -1899,7 +1870,11 @@ This is becoming a headache, but thankfully, you can manage all of this
 directly from the Kubernetes cluster with the use of an **Ingress**.
 Ingress helps your users access your application through a single externally-
 accesible URL that you can configure to route to different services within your
-cluster. Oh, and you can configure it to use SSL! To begin setting up an 
+cluster. Oh, and you can configure it to use SSL! 
+
+![Credit: Ahmet Alp Balkan](https://miro.medium.com/max/1400/1*KIVa4hUVZxg-8Ncabo8pdg.png)
+
+To begin setting up an 
 Ingress, we must deploy an **Ingress Controller**, which is an application that
 handles the proxying logic for us. You can use Nginx, Contour, HAProxy, 
 Traefik, Istio, or some other application, but we will be using Nginx in this
