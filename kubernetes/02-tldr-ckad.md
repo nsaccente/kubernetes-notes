@@ -32,6 +32,10 @@
   - [NodePort Service](#nodeport-service)
   - [Ingress Controllers](#ingress-controllers)
   - [Ingress Resources](#ingress-resources)
+- [State Persistence](#state-persistence
+  - []()
+  - []()
+  - []()
 
 Welcome to the official unofficial tl;dr documentation for Kubernetes! These
 are my notes from the Udemy course entitled:
@@ -344,7 +348,7 @@ kubectl rollout undo deployment/mydeployment-name
    * `-o wide`: Output in the plain-text format with any additional information.
    * `-o yaml`: Output a YAML formatted API object.`
 
-> **Pro Tip**: You can use the flag `--dry-run` when executing a `kubectl`
+> **Pro Tip**: You can use the flag `--dry-run=client` when running a `kubectl`
   command and it will inform you whether the syntax of the command and config
   are correct, as well as if the resource is able to be created.
 
@@ -1854,7 +1858,7 @@ described
 
 ---
 
-
+<!-- 
 ## Ingress Controllers
 
 Let's say you own a website that has several applications accessible through
@@ -1899,31 +1903,43 @@ spec:
          -  name: nginx-ingress-controller
             image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.21.0
          
-            # 1. Command to run nginx server
-            args:
-               - /nginx-ingress-controller
-               - --configmap-$(POD_NAMESPACE)/nginx-configuration
-            
-            # 2. Injecting environment variables into the Pod,
-            env:
-            -  name: POD_NAME
-               valueFrom:
-                  fieldRef:
-                     fieldPath: metadata.name
-            - name: POD_NAMESPACE
-               valueFrom:
-                  fieldRef:
-                     fieldPath: metadata.namespace
-                  
-            # 3.
-            ports:
-            -  name: http
-               containerPort: 80
-            -  name: https
-               containerPorts: 443
+         # 1. Command to run nginx server;
+         args:
+            - "/nginx-ingress-controller"
+            - "--configmap-$(POD_NAMESPACE)/nginx-configuration"
+         
+         # 2. Set environment variables for Pod;
+         env:
+         -  name: POD_NAME
+            valueFrom:
+               fieldRef:
+                  fieldPath: metadata.name
+         - name: POD_NAMESPACE
+            valueFrom:
+               fieldRef:
+                  fieldPath: metadata.namespace
+               
+         # 3. Specify the ports ued by the ingress controller.
+         ports:
+         -  name: http
+            containerPort: 80
+         -  name: https
+            containerPorts: 443
          
 ```
-1. 
+
+You'll notice that we're implementing an Ingress Controller as a Deployment,
+which provides scalability as the controller receives more and more traffic;
+not to mention that it enables us to take advantage of rolling upgrades. We
+give the Deployment a selector to help identify what Pods belong to the
+Deployment, and of course, we give the Deployment a set of containers. Notice
+the following:
+
+1. We run
+   `/nginx-ingress-controller --configmap-$POD_NAMESPACE)/nginx-configuration`
+   in the container's command line to start the nginx ingress controller.
+
+1. We set the environmental variables for the Pod.
 
 
 
@@ -1968,4 +1984,8 @@ metadata:
 ```
 
 
-## Ingress Resources
+## Ingress Resources -->
+
+# State Persistence
+
+![s9e17_simpsons](https://media.giphy.com/media/l2JdVBgENXjMCLToI/giphy.gif)
