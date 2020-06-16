@@ -32,9 +32,8 @@
   - [NodePort Service](#nodeport-service)
   - [Ingress Controllers](#ingress-controllers)
   - [Ingress Resources](#ingress-resources)
-- [State Persistence](#state-persistence
-  - []()
-  - []()
+  - [Network Policies](#network-policies)
+- [State Persistence](#state-persistence)
   - []()
 
 Welcome to the official unofficial tl;dr documentation for Kubernetes! These
@@ -1852,13 +1851,12 @@ one at random to route the traffic to. This behavior can be changed, as
 described 
 [here](https://kubernetes.io/docs/concepts/services-networking/service/).
 
-
 [Back to top](#table-of-contents)
 
 
 ---
 
-<!-- 
+
 ## Ingress Controllers
 
 Let's say you own a website that has several applications accessible through
@@ -1878,11 +1876,14 @@ cluster. Oh, and you can configure it to use SSL!
 
 ![Credit: Ahmet Alp Balkan](https://miro.medium.com/max/1400/1*KIVa4hUVZxg-8Ncabo8pdg.png)
 
-To begin setting up an 
-Ingress, we must deploy an **Ingress Controller**, which is an application that
-handles the proxying logic for us. You can use Nginx, Contour, HAProxy, 
-Traefik, Istio, or some other application, but we will be using Nginx in this
-example. Let's learn about configuring an Ingress Controller:
+To begin setting up an Ingress, we must deploy an **Ingress Controller**, which
+is the application responsible for handling the proxying for us. You can use 
+Nginx, Contour, HAProxy, Traefik, Istio, or some other application, but we will
+be using Nginx in this example. To configure an Ingress Controller, we require:
+a Deployment that abstracts interacting with the Nginx Pod, a NodePort Service
+to expose the Ingress Controller to the outside world, and a ServiceAccount to
+provide the Ingress Controller the ability to modify the internal K8s network.
+Let's start by creating the deployment:
 
 ```yaml
 apiVersion: extensions/v1beta1
@@ -1903,12 +1904,7 @@ spec:
          -  name: nginx-ingress-controller
             image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.21.0
          
-         # 1. Command to run nginx server;
-         args:
-            - "/nginx-ingress-controller"
-            - "--configmap-$(POD_NAMESPACE)/nginx-configuration"
-         
-         # 2. Set environment variables for Pod;
+         # 1. Set environment variables for Pod;
          env:
          -  name: POD_NAME
             valueFrom:
@@ -1919,29 +1915,46 @@ spec:
                fieldRef:
                   fieldPath: metadata.namespace
                
+         # 2. Command to run nginx server;
+         args:
+            - "/nginx-ingress-controller"
+            - "--configmap-$(POD_NAMESPACE)/nginx-configuration"
+         
          # 3. Specify the ports ued by the ingress controller.
          ports:
          -  name: http
             containerPort: 80
          -  name: https
             containerPorts: 443
-         
 ```
 
-You'll notice that we're implementing an Ingress Controller as a Deployment,
-which provides scalability as the controller receives more and more traffic;
-not to mention that it enables us to take advantage of rolling upgrades. We
-give the Deployment a selector to help identify what Pods belong to the
-Deployment, and of course, we give the Deployment a set of containers. Notice
-the following:
+1. We create some environment variables that will be visable to all containers
+   in our Pod. We utilize the metadata from the Pods that will be created and
+   assign them to `POD_NAME` and `POD_NAMESPACE`.
 
-1. We run
+1. We run 
    `/nginx-ingress-controller --configmap-$POD_NAMESPACE)/nginx-configuration`
-   in the container's command line to start the nginx ingress controller.
+   on the Pod to run the nginx server, using the environment variables we
+   defined in the lines above. We define `nginx-configuration` in a second, but
+   this is essentially a file that stores configuration information about the
+   Ingress Controller.
 
-1. We set the environmental variables for the Pod.
+1. We specify the ports used by the Ingress Controller, which are your classic
+   HTTP/S ports.
 
+Now, we need to create a ConfigMap to pass information about how to configure
+the Nginx server. We won't add much to it, but just know that if you ever need
+to configure your Ingress Controller, this is the place to do it:
 
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+   name: nginx-configuration 
+```
+
+Next, we need to create a NodePort Service object to route traffic that hits 
+the node through TCP ports 443 or 80 to all Pods that match the given selector.
 
 ```yaml
 apiVersion: v1
@@ -1963,8 +1976,9 @@ spec:
       name: nginx-ingress
 ```
 
-
-
+Finally, we need to create a ServiceAccount with the correct roles and role 
+bindings. This will allow the Ingress Controller to monitor the Kubernetes
+cluster for Ingress Resources (which we will describe in the next section. 
 
 ```yaml
 apiVersion: v1
@@ -1974,18 +1988,201 @@ metadata:
 ```
 
 
+[Back to top](#table-of-contents)
 
+
+---
+
+
+## Ingress Resources
+
+Now, it's time to define **Ingress Resource** objects, which are sets of rules
+and configurations that are applied to the Ingress Controller. Through the use
+of Ingrss Resources, we can: forward all incoming traffic to a single 
+application, route traffic to different applications based on the URL, route
+users based on the domain name itself, etc... Let's start by defining an 
+Ingress Resource to serve the Google Voice application.
 
 ```yaml
-kind: ConfigMap
-apiVersion: V1
-metadata:
-   name: nginx-configuration
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata: 
+   name: ingress-voice
+spec:
+   backend:
+      serviceName: google-voice-service
+      servicePort: 80
 ```
 
+And now, we'll create another Ingress object to describe the path to our Google
+Hangouts application.
 
-## Ingress Resources -->
+```yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata: 
+   name: ingress-hangouts
+spec:
+   backend:
+      serviceName: google-hangouts-service
+      servicePort: 80
+```
+
+Now that we've defined Ingress Resources for our Google Voice and Google
+Hangouts apps, we need to tell the IngressController how to manage routing.
+Let's build an Ingress Resource that routes traffic based on the URL; e.g.
+google.com/voice, google.com/hangsouts, etc. :
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+   name: ingress-voice-or-hangouts
+spec:
+   rules:
+   -  http:
+         paths:
+         -  path: /voice
+            backend:
+               serviceName: google-voice-service
+               servicePort: 80
+         -  path: /hangouts
+            backend:
+               serviceName: google-hangouts-service
+               servicePort: 80
+```
+
+At this point we can hit the specified `backend` via their specified 
+`serviceName` and `servicePort`. But let's say that instead, we wanted to be
+able to route traffic based on the domain. For example, we want to launch or
+Voice app through _voice.google.com_. Well, the good news is, we can simply
+add another Ingress Resource taht has rules defined for host:
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+   name: ingress-voice-or-hangouts-2
+spec:
+   rules:
+   -  host: voice.google.com
+      http:
+         paths:
+         -  backend:
+               serviceName: google-voice-service
+               servicePort: 80
+-  host: hangouts.google.com
+   http:
+      paths:
+      -  backend:
+            serviceName: google-hangouts-service
+            servicePort: 80
+```
+
+Tada! It's that easy! If you go in your browser address bar right now and type
+`https://google.com/voice`, then you'll notice that you are redirected to
+`https://voice.google.com`. This is accomplished with the use of the
+`rewrite-target` option. For more information, see 
+[here](https://kubernetes.github.io/ingress-nginx/examples/rewrite/).
+
+
+[Back to top](#table-of-contents)
+
+
+---
+
+
+## Network Policies
+
+A **NetworkPolicy** is a way to control inbound or outbound traffic that Pods
+can receive or send. A NetworkPolicy is another Kubernetes object that uses
+labels and selectors to determine what Pods to target.
+
+Let's say we have an API that sends logfiles to a database. Refer to the
+Pod specs below:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+   name: api-pod
+   labels:
+      role: api
+spec:
+   containers:
+   -  name: python3
+      image: python3
+```
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+   name: log-db
+   labels:
+      role: db
+spec:
+   containers:
+      -  name: mysql 
+         image: mysql 
+```
+
+As you can see, we the two Pods we are concerned about are named `api-pod` and
+`log-db`. Let's create a SecurityPolicy object to only allow ingress (inbound)
+traffic to `log-db` from `api-pod` over port 3306/TCP.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+   name: db-policy
+spec:
+
+   # 1. Select what Pod(s) to apply the SecurityPolicy to.
+   podSelector:
+      matchLabels:
+         role: db
+   
+   # 2. Specify that you want to define an ingress policy.
+   policyTypes:
+   -  Ingress
+
+   # 3. Allow inbound from Pods matching the selector over port 3306/TCP.
+   ingress:
+   -  from:
+      -  podSelector:
+            matchLabels:
+               name: api-pod
+      ports:
+      -  protocol: TCP
+         port: 3306
+```
+
+1. Utilize selectors to _select_ Pods with `role=db`.
+1. Specify that you want to define an ingress policy.
+1. Describe your ingress policy. You want to allow `ingress` traffic `from` all
+   Pods that match the `podSelector`:`name=api-pod` over `port=3306` with
+   protocol `TCP`.
+
+Defining an egress (outbound) traffic rule is pretty much the same. The K8s
+[docs](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
+describe this ad nauseum.
+
+**NOTE**: Not all network solutions support NetworkPolicies. Kube-router,
+Calico, Romana, and Weave-net, are a few network solutions that support K8s
+NetworkPolicy objects. Read the K8s 
+[docs](https://kubernetes.io/docs/concepts/cluster-administration/networking/)
+for more info.
+
+[Back to top](#table-of-contents)
+
+
+---
+
 
 # State Persistence
 
-![s9e17_simpsons](https://media.giphy.com/media/l2JdVBgENXjMCLToI/giphy.gif)
+![futurama_cryogenics](https://images.medicaldaily.com/sites/medicaldaily.com/files/2016/12/01/fry-frozen.gif)
+
+## Volumes
+
